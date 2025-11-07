@@ -6,9 +6,20 @@ import { useSelector } from "react-redux";
 import { selectMarket } from "@/store/chat.ts";
 import ModelMarket from "@/components/home/ModelMarket.tsx";
 import ErrorBoundary from "@/components/ErrorBoundary.tsx";
+import { selectAuthenticated } from "@/store/auth.ts";
+import Landing from "@/routes/Landing.tsx";
 
 function Home() {
   const market = useSelector(selectMarket);
+  const authenticated = useSelector(selectAuthenticated);
+
+  if (!authenticated) {
+    return (
+      <ErrorBoundary>
+        <Landing />
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>

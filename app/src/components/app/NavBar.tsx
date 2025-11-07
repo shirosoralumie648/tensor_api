@@ -57,7 +57,7 @@ function NavBar() {
           className={`logo`}
           src={appLogo}
           alt=""
-          onClick={() => router.navigate("/")}
+          onClick={() => router.navigate(auth ? "/app" : "/")}
         />
         <div className={`grow`} />
         <ProjectLink />

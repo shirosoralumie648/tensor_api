@@ -8,3 +8,18 @@
 [DEBUG] - [2025-11-07 23:29:43] - [connection] connected to redis (host: redis)
 [INFO] - [2025-11-07 23:29:43] - [service] seo optimization applied to index.cache.html
 [INFO] - [2025-11-07 23:29:43] - [service] pwa manifest applied to site.cache.webmanifest
+[DEBUG] - [2025-11-08 00:29:21] - [connection] connected to mysql server (host: mysql)
+[DEBUG] - [2025-11-08 00:29:21] - [service] 1 user(s) found, skip creating root user
+[DEBUG] - [2025-11-08 00:29:21] - [connection] connected to redis (host: redis)
+[INFO] - [2025-11-08 00:29:21] - [service] seo optimization applied to index.cache.html
+[INFO] - [2025-11-08 00:29:21] - [service] pwa manifest applied to site.cache.webmanifest
+[DEBUG] - [2025-11-08 00:42:58] - [connection] connected to mysql server (host: mysql)
+[DEBUG] - [2025-11-08 00:42:58] - [service] 1 user(s) found, skip creating root user
+[DEBUG] - [2025-11-08 00:42:58] - [connection] connected to redis (host: redis)
+[INFO] - [2025-11-08 00:42:58] - [service] seo optimization applied to index.cache.html
+[INFO] - [2025-11-08 00:42:58] - [service] pwa manifest applied to site.cache.webmanifest
+[DEBUG] - [2025-11-08 01:07:40] - [connection] connected to mysql server (host: mysql)
+[DEBUG] - [2025-11-08 01:07:40] - [service] 1 user(s) found, skip creating root user
+[DEBUG] - [2025-11-08 01:07:40] - [connection] connected to redis (host: redis)
+[INFO] - [2025-11-08 01:07:40] - [service] seo optimization applied to index.cache.html
+[INFO] - [2025-11-08 01:07:40] - [service] pwa manifest applied to site.cache.webmanifest
