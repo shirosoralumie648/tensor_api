@@ -1,7 +1,6 @@
 import { Toaster } from "@/components/ui/toaster.tsx";
 import QuotaDialog from "./QuotaDialog.tsx";
 import ApikeyDialog from "./ApikeyDialog.tsx";
-import PackageDialog from "./PackageDialog.tsx";
 import SubscriptionDialog from "./SubscriptionDialog.tsx";
 import ShareManagementDialog from "./ShareManagementDialog.tsx";
 import InvitationDialog from "./InvitationDialog.tsx";
@@ -14,7 +13,6 @@ function DialogManager() {
       <Toaster />
       <QuotaDialog />
       <ApikeyDialog />
-      <PackageDialog />
       <SubscriptionDialog />
       <ShareManagementDialog />
       <InvitationDialog />
