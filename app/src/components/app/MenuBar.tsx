@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dropdown-menu.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
-  Boxes,
   CalendarPlus,
   Cloud,
   CloudOff,
@@ -20,19 +19,14 @@ import {
   ListStart,
   Plug,
   Shield,
-  User,
 } from "lucide-react";
 import { openDialog as openSub } from "@/store/subscription.ts";
-import { openDialog as openPackageDialog } from "@/store/package.ts";
 import { openDialog as openInvitationDialog } from "@/store/invitation.ts";
 import { openDialog as openSharingDialog } from "@/store/sharing.ts";
 import { openDialog as openApiDialog } from "@/store/api.ts";
 import router from "@/router.tsx";
-import { deeptrainEndpoint } from "@/conf/env.ts";
 import React from "react";
 import { subscriptionDataSelector } from "@/store/globals.ts";
-import { openWindow } from "@/utils/device.ts";
-import { DeeptrainOnly } from "@/conf/deeptrain.tsx";
 
 type MenuBarProps = {
   children: React.ReactNode;
@@ -73,12 +67,6 @@ function MenuBar({ children, className }: MenuBarProps) {
             {t("sub.title")}
           </DropdownMenuItem>
         )}
-        <DeeptrainOnly>
-          <DropdownMenuItem onClick={() => dispatch(openPackageDialog())}>
-            <Boxes className={`h-4 w-4 mr-1`} />
-            {t("pkg.title")}
-          </DropdownMenuItem>
-        </DeeptrainOnly>
         <DropdownMenuItem onClick={() => dispatch(openInvitationDialog())}>
           <Gift className={`h-4 w-4 mr-1`} />
           {t("invitation.invitation")}
@@ -91,14 +79,6 @@ function MenuBar({ children, className }: MenuBarProps) {
           <Plug className={`h-4 w-4 mr-1`} />
           {t("api.title")}
         </DropdownMenuItem>
-        <DeeptrainOnly>
-          <DropdownMenuItem
-            onClick={() => openWindow(`${deeptrainEndpoint}/home`)}
-          >
-            <User className={`h-4 w-4 mr-1`} />
-            {t("my-account")}
-          </DropdownMenuItem>
-        </DeeptrainOnly>
         {admin && (
           <DropdownMenuItem onClick={() => router.navigate("/admin")}>
             <Shield className={`h-4 w-4 mr-1`} />
