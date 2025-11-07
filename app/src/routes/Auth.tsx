@@ -63,8 +63,7 @@ function DeepAuth() {
               title: t("login-success"),
               description: t("login-success-prompt"),
             });
-
-            await router.navigate("/");
+            await router.navigate("/app");
           });
       })
       .catch((err) => {
@@ -133,7 +132,7 @@ function Login() {
       }
 
       validateToken(globalDispatch, resp.token);
-      await router.navigate("/");
+      await router.navigate("/app");
     } catch (err) {
       console.debug(err);
       toast({

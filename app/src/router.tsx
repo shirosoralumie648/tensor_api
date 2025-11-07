@@ -9,6 +9,7 @@ import NotFound from "./routes/NotFound.tsx";
 import Auth from "./routes/Auth.tsx";
 import React, { Suspense, useEffect } from "react";
 import { useDeeptrain } from "@/conf/env.ts";
+import Landing from "./routes/Landing.tsx";
 import Register from "@/routes/Register.tsx";
 import Forgot from "@/routes/Forgot.tsx";
 import { lazyFactor } from "@/utils/loader.tsx";
@@ -37,7 +38,17 @@ const router = createBrowserRouter(
     {
       id: "home",
       path: "/",
-      Component: Home,
+      element: <Landing />,
+      ErrorBoundary: NotFound,
+    },
+    {
+      id: "app",
+      path: "/app",
+      element: (
+        <AuthRequired>
+          <Home />
+        </AuthRequired>
+      ),
       ErrorBoundary: NotFound,
     },
     {
@@ -232,7 +243,7 @@ export function AuthForbidden({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (init && authenticated) {
-      navigate("/", { state: { from: location.pathname } });
+      navigate("/app", { state: { from: location.pathname } });
     }
   }, [init, authenticated]);
 
@@ -247,7 +258,7 @@ export function AdminRequired({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (init && !admin) {
-      navigate("/", { state: { from: location.pathname } });
+      navigate("/app", { state: { from: location.pathname } });
     }
   }, [init, admin]);
 
