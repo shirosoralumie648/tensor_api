@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/select.tsx";
 import { Label } from "@/components/ui/label.tsx";
 import { Input } from "@/components/ui/input.tsx";
-import { useMemo, useReducer, useState } from "react";
+import { useMemo, useReducer, useState, useEffect, useRef } from "react";
+import type { ChangeEvent } from "react";
 import { formReducer } from "@/utils/form.ts";
 import { NumberInput } from "@/components/ui/number-input.tsx";
 import {
@@ -70,7 +71,59 @@ type CompProps<T> = {
   form: SystemProps;
   dispatch: (action: any) => void;
   onChange: (doToast?: boolean) => Promise<void>;
+  saving?: boolean;
 };
+
+function validateSystem(form: SystemProps): string[] {
+  const errors: string[] = [];
+  const isUrl = (s: string) => /^https?:\/\//.test(s.trim());
+  if (form.general.backend && !isUrl(form.general.backend)) {
+    errors.push("后端地址须为 http(s) URL");
+  }
+  if (form.general.file && !isUrl(form.general.file)) {
+    errors.push("文件服务地址须为 http(s) URL");
+  }
+  if ((form.site.buy_link || "").trim().length > 0 && !isUrl(form.site.buy_link)) {
+    errors.push("购买链接须为 http(s) URL");
+  }
+  if (form.search.endpoint && !isUrl(form.search.endpoint)) {
+    errors.push("搜索服务地址须为 http(s) URL");
+  }
+  if (form.search.crop && (!form.search.crop_len || form.search.crop_len <= 0)) {
+    errors.push("开启内容裁剪时需设置正整数裁剪长度");
+  }
+  if (form.common.expire < 0) {
+    errors.push("缓存过期时间不能为负数");
+  }
+  if (form.common.size < 0) {
+    errors.push("缓存条目上限不能为负数");
+  }
+  if (form.site.quota < 0) {
+    errors.push("默认配额不能为负数");
+  }
+  if (typeof form.search.safe_search !== "number" || form.search.safe_search < 0 || form.search.safe_search > 2) {
+    errors.push("安全搜索模式无效");
+  }
+  if (form.general.pwa_manifest) {
+    try {
+      JSON.parse(form.general.pwa_manifest);
+    } catch {
+      errors.push("PWA Manifest 需为合法 JSON");
+    }
+  }
+  if (form.mail.white_list.enabled) {
+    const wl = (form.mail.white_list.white_list || []).concat(
+      (form.mail.white_list.custom || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean)
+    );
+    if (wl.length === 0) {
+      errors.push("邮箱白名单已开启但未选择任何域名");
+    }
+  }
+  return errors;
+}
 
 function RootDialog() {
   const { t } = useTranslation();
@@ -149,7 +202,7 @@ function RootDialog() {
   );
 }
 
-function General({ data, dispatch, onChange }: CompProps<GeneralState>) {
+function General({ data, dispatch, onChange, saving }: CompProps<GeneralState>) {
   const { t } = useTranslation();
 
   return (
@@ -199,6 +252,11 @@ function General({ data, dispatch, onChange }: CompProps<GeneralState>) {
           })}
         />
       </ParagraphItem>
+      {data.logo && (
+        <div className={`mt-2`}>
+          <img src={data.logo} alt={`logo`} className={`h-10 w-10 rounded`} />
+        </div>
+      )}
       <ParagraphItem>
         <Label>{t("admin.system.backend")}</Label>
         <Input
@@ -268,7 +326,7 @@ function General({ data, dispatch, onChange }: CompProps<GeneralState>) {
         <RootDialog />
         <Button
           size={`sm`}
-          loading={true}
+          loading={!!saving}
           onClick={async () => await onChange()}
         >
           {t("admin.system.save")}
@@ -278,7 +336,7 @@ function General({ data, dispatch, onChange }: CompProps<GeneralState>) {
   );
 }
 
-function Mail({ data, dispatch, onChange }: CompProps<MailState>) {
+function Mail({ data, dispatch, onChange, saving }: CompProps<MailState>) {
   const { t } = useTranslation();
   const [email, setEmail] = useState<string>("");
 
@@ -402,6 +460,7 @@ function Mail({ data, dispatch, onChange }: CompProps<MailState>) {
           <Require /> {t("admin.system.mailPass")}
         </Label>
         <Input
+          type={`password`}
           value={data.password}
           onChange={(e) =>
             dispatch({
@@ -508,7 +567,7 @@ function Mail({ data, dispatch, onChange }: CompProps<MailState>) {
         </Dialog>
         <Button
           size={`sm`}
-          loading={true}
+          loading={!!saving}
           onClick={async () => await onChange()}
         >
           {t("admin.system.save")}
@@ -518,7 +577,7 @@ function Mail({ data, dispatch, onChange }: CompProps<MailState>) {
   );
 }
 
-function Site({ data, dispatch, onChange }: CompProps<SiteState>) {
+function Site({ data, dispatch, onChange, saving }: CompProps<SiteState>) {
   const { t } = useTranslation();
 
   return (
@@ -655,7 +714,7 @@ function Site({ data, dispatch, onChange }: CompProps<SiteState>) {
         <div className={`grow`} />
         <Button
           size={`sm`}
-          loading={true}
+          loading={!!saving}
           onClick={async () => await onChange()}
         >
           {t("admin.system.save")}
@@ -665,7 +724,7 @@ function Site({ data, dispatch, onChange }: CompProps<SiteState>) {
   );
 }
 
-function Common({ form, data, dispatch, onChange }: CompProps<CommonState>) {
+function Common({ form, data, dispatch, onChange, saving }: CompProps<CommonState>) {
   const { t } = useTranslation();
 
   const { channelModels } = useChannelModels();
@@ -822,7 +881,7 @@ function Common({ form, data, dispatch, onChange }: CompProps<CommonState>) {
         <div className={`grow`} />
         <Button
           size={`sm`}
-          loading={true}
+          loading={!!saving}
           onClick={async () => await onChange()}
         >
           {t("admin.system.save")}
@@ -832,7 +891,7 @@ function Common({ form, data, dispatch, onChange }: CompProps<CommonState>) {
   );
 }
 
-function Search({ data, dispatch, onChange }: CompProps<SearchState>) {
+function Search({ data, dispatch, onChange, saving }: CompProps<SearchState>) {
   const { t } = useTranslation();
 
   const [search, setSearch] = useState<string>("");
@@ -1031,7 +1090,7 @@ function Search({ data, dispatch, onChange }: CompProps<SearchState>) {
         </Dialog>
         <Button
           size={`sm`}
-          loading={true}
+          loading={!!saving}
           onClick={async () => await onChange()}
         >
           {t("admin.system.save")}
@@ -1050,11 +1109,27 @@ function System() {
   );
 
   const [loading, setLoading] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  const importRef = useRef<HTMLInputElement | null>(null);
+  const initialSnapRef = useRef<string>("");
+  const errors = useMemo(() => validateSystem(data), [data]);
+  const dirty = useMemo(
+    () => initialSnapRef.current !== JSON.stringify(data),
+    [data],
+  );
 
   const doSaving = async (doToast?: boolean) => {
+    if (errors.length > 0) {
+      toast({ title: "配置不合法", description: errors.slice(0, 3).join("；") });
+      return;
+    }
+    setSaving(true);
     const res = await setConfig(data);
-
+    if (res.status) {
+      initialSnapRef.current = JSON.stringify(data);
+    }
     if (doToast !== false) toastState(toast, t, res, true);
+    setSaving(false);
   };
 
   const doRefresh = async () => {
@@ -1064,10 +1139,52 @@ function System() {
     toastState(toast, t, res);
     if (res.status) {
       setData({ type: "set", value: res.data });
+      initialSnapRef.current = JSON.stringify(res.data);
     }
   };
 
   useEffectAsync(doRefresh, []);
+  useEffect(() => {
+    const handler = (e: BeforeUnloadEvent) => {
+      if (!dirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [dirty]);
+
+  const onExport = () => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "system-config.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = async (
+    e: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const text = await file.text();
+      const json = JSON.parse(text);
+      if (!(json.general && json.site && json.mail && json.search && json.common)) {
+        throw new Error("文件格式不正确");
+      }
+      setData({ type: "set", value: json });
+      toast({ title: "已导入配置，尚未保存" });
+    } catch (err: any) {
+      toast({ title: "导入失败", description: err?.message || String(err) });
+    } finally {
+      e.target.value = "";
+    }
+  };
 
   return (
     <div className={`system`}>
@@ -1078,10 +1195,38 @@ function System() {
         <CardContent className={`flex flex-col gap-1`}>
           <div className={`system-actions flex flex-row`}>
             <div className={`grow`} />
+            {dirty && (
+              <div className={`text-xs text-amber-600 self-center mr-2`}>
+                有未保存的更改
+              </div>
+            )}
+            <Button
+              size={`sm`}
+              variant={`outline`}
+              className={`mr-2`}
+              onClick={onExport}
+            >
+              导出
+            </Button>
+            <Button
+              size={`sm`}
+              variant={`outline`}
+              className={`mr-2`}
+              onClick={() => importRef.current?.click()}
+            >
+              导入
+            </Button>
+            <input
+              ref={importRef}
+              type={`file`}
+              accept={`application/json`}
+              className={`hidden`}
+              onChange={handleImport}
+            />
             <Button
               size={`icon`}
               variant={`outline`}
-              loading={true}
+              loading={loading}
               className={`mr-2`}
               onClick={async () => await doRefresh()}
             >
@@ -1089,41 +1234,57 @@ function System() {
             </Button>
             <Button
               size={`icon`}
-              loading={true}
+              loading={!!saving}
+              disabled={!dirty}
               onClick={async () => await doSaving()}
             >
               <Save className={`h-4 w-4`} />
             </Button>
           </div>
+          {errors.length > 0 && (
+            <div className={`border border-red-200 bg-red-50 text-red-700 rounded-md p-3 text-sm`}>
+              <div className={`font-medium mb-1`}>存在 {errors.length} 处配置问题：</div>
+              <ul className={`list-disc pl-5`}>
+                {errors.map((e, i) => (
+                  <li key={i}>{e}</li>
+                ))}
+              </ul>
+            </div>
+          )}
           <General
             form={data}
             data={data.general}
             dispatch={setData}
             onChange={doSaving}
+            saving={saving}
           />
           <Site
             form={data}
             data={data.site}
             dispatch={setData}
             onChange={doSaving}
+            saving={saving}
           />
           <Mail
             form={data}
             data={data.mail}
             dispatch={setData}
             onChange={doSaving}
+            saving={saving}
           />
           <Search
             form={data}
             data={data.search}
             dispatch={setData}
             onChange={doSaving}
+            saving={saving}
           />
           <Common
             form={data}
             data={data.common}
             dispatch={setData}
             onChange={doSaving}
+            saving={saving}
           />
         </CardContent>
       </Card>
