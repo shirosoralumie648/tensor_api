@@ -56,6 +56,10 @@ func delOAuthState(c *gin.Context, cache *redis.Client, state string) {
 
 func OAuthStart(c *gin.Context) {
 	provider := strings.ToLower(c.Param("provider"))
+	if !viper.GetBool("oauth." + provider + ".enabled") {
+		c.JSON(http.StatusOK, gin.H{"status": false, "error": provider + " disabled"})
+		return
+	}
 	state := utils.GenerateChar(24)
 	cache := utils.GetCacheFromContext(c)
 	// support binding mode: append "|bind|<token>" into state storage value
@@ -259,6 +263,10 @@ func getOrCreateOAuthUser(c *gin.Context, provider, openID, display, email strin
 
 func OAuthCallback(c *gin.Context) {
 	provider := strings.ToLower(c.Param("provider"))
+	if !viper.GetBool("oauth." + provider + ".enabled") {
+		c.JSON(http.StatusOK, gin.H{"status": false, "error": provider + " disabled"})
+		return
+	}
 	state := c.Query("state")
 	code := c.Query("code")
 	cache := utils.GetCacheFromContext(c)

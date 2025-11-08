@@ -306,3 +306,54 @@ func (c *SystemConfig) AcceptImageStore() bool {
 func (c *SystemConfig) SupportRelayPlan() bool {
 	return c.Site.RelayPlan
 }
+
+// ===================== OAuth Config =====================
+
+type oauthGithubState struct {
+	Enabled      bool   `json:"enabled" mapstructure:"enabled"`
+	ClientID     string `json:"client_id" mapstructure:"client_id"`
+	ClientSecret string `json:"client_secret" mapstructure:"client_secret"`
+}
+
+type oauthGoogleState struct {
+	Enabled      bool   `json:"enabled" mapstructure:"enabled"`
+	ClientID     string `json:"client_id" mapstructure:"client_id"`
+	ClientSecret string `json:"client_secret" mapstructure:"client_secret"`
+}
+
+type oauthWechatState struct {
+	Enabled   bool   `json:"enabled" mapstructure:"enabled"`
+	AppID     string `json:"app_id" mapstructure:"app_id"`
+	AppSecret string `json:"app_secret" mapstructure:"app_secret"`
+}
+
+type oauthQQState struct {
+	Enabled   bool   `json:"enabled" mapstructure:"enabled"`
+	AppID     string `json:"app_id" mapstructure:"app_id"`
+	AppSecret string `json:"app_secret" mapstructure:"app_secret"`
+}
+
+type OAuthConfig struct {
+	Github oauthGithubState `json:"github" mapstructure:"github"`
+	Google oauthGoogleState `json:"google" mapstructure:"google"`
+	Wechat oauthWechatState `json:"wechat" mapstructure:"wechat"`
+	QQ     oauthQQState     `json:"qq" mapstructure:"qq"`
+}
+
+func NewOAuthConfig() *OAuthConfig {
+	cfg := &OAuthConfig{}
+	if err := viper.UnmarshalKey("oauth", cfg); err != nil {
+		panic(err)
+	}
+	return cfg
+}
+
+func (o *OAuthConfig) Save() error {
+	viper.Set("oauth", o)
+	return viper.WriteConfig()
+}
+
+func (o *OAuthConfig) Update(cfg *OAuthConfig) error {
+	*o = *cfg
+	return o.Save()
+}
