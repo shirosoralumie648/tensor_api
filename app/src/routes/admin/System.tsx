@@ -65,6 +65,7 @@ import { useSelector } from "react-redux";
 import { selectSupportModels } from "@/store/chat.ts";
 import { JSONEditorProvider } from "@/components/EditorProvider.tsx";
 import { Combobox } from "@/components/ui/combo-box.tsx";
+import OAuthSettings from "@/components/admin/OAuthSettings.tsx";
 
 type CompProps<T> = {
   data: T;
@@ -1272,6 +1273,7 @@ function System() {
             onChange={doSaving}
             saving={saving}
           />
+          <OAuthSettings />
           <Search
             form={data}
             data={data.search}

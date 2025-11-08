@@ -163,6 +163,13 @@ func GetConfig(c *gin.Context) {
 	})
 }
 
+func GetOAuthConfig(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status": true,
+		"data":   OAuthInstance,
+	})
+}
+
 func UpdateConfig(c *gin.Context) {
 	var config SystemConfig
 	if err := c.ShouldBindJSON(&config); err != nil {
@@ -174,6 +181,23 @@ func UpdateConfig(c *gin.Context) {
 	}
 
 	state := SystemInstance.UpdateConfig(&config)
+	c.JSON(http.StatusOK, gin.H{
+		"status": state == nil,
+		"error":  utils.GetError(state),
+	})
+}
+
+func UpdateOAuthConfig(c *gin.Context) {
+	var cfg OAuthConfig
+	if err := c.ShouldBindJSON(&cfg); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": false,
+			"error":  err.Error(),
+		})
+		return
+	}
+
+	state := OAuthInstance.Update(&cfg)
 	c.JSON(http.StatusOK, gin.H{
 		"status": state == nil,
 		"error":  utils.GetError(state),
