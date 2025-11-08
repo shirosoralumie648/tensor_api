@@ -46,6 +46,11 @@ type SubscribeForm struct {
 	Month int `json:"month" binding:"required"`
 }
 
+type UpdateProfileForm struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
+}
+
 func GetUser(c *gin.Context) *User {
 	if c.GetBool("auth") {
 		return &User{

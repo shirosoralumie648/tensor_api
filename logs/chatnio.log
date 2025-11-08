@@ -33,3 +33,21 @@
 [DEBUG] - [2025-11-08 01:35:30] - [connection] connected to redis (host: redis)
 [INFO] - [2025-11-08 01:35:30] - [service] seo optimization applied to index.cache.html
 [INFO] - [2025-11-08 01:35:30] - [service] pwa manifest applied to site.cache.webmanifest
+[DEBUG] - [2025-11-08 12:25:41] - [connection] connected to mysql server (host: mysql)
+[DEBUG] - [2025-11-08 12:25:41] - [service] 1 user(s) found, skip creating root user
+[DEBUG] - [2025-11-08 12:25:41] - [connection] connected to redis (host: redis)
+[INFO] - [2025-11-08 12:25:41] - [service] seo optimization applied to index.cache.html
+[INFO] - [2025-11-08 12:25:41] - [service] pwa manifest applied to site.cache.webmanifest
+[WARNING] - [2025-11-08 12:28:20] - [connection] failed to connect to mysql server: mysql (message: dial tcp 172.18.0.2:3306: connect: connection refused), will retry in 5 seconds
+[WARNING] - [2025-11-08 12:28:25] - [connection] failed to connect to mysql server: mysql (message: dial tcp 172.18.0.2:3306: connect: connection refused), will retry in 5 seconds
+[DEBUG] - [2025-11-08 12:28:30] - [connection] connected to mysql server (host: mysql)
+[DEBUG] - [2025-11-08 12:28:30] - [service] 1 user(s) found, skip creating root user
+[DEBUG] - [2025-11-08 12:28:30] - [connection] connected to redis (host: redis)
+[INFO] - [2025-11-08 12:28:30] - [service] seo optimization applied to index.cache.html
+[INFO] - [2025-11-08 12:28:30] - [service] pwa manifest applied to site.cache.webmanifest
+[WARNING] - [2025-11-08 12:29:10] - [connection] failed to connect to mysql server: mysql (message: dial tcp 172.18.0.3:3306: connect: connection refused), will retry in 5 seconds
+[DEBUG] - [2025-11-08 12:29:15] - [connection] connected to mysql server (host: mysql)
+[DEBUG] - [2025-11-08 12:29:15] - [service] 1 user(s) found, skip creating root user
+[DEBUG] - [2025-11-08 12:29:15] - [connection] connected to redis (host: redis)
+[INFO] - [2025-11-08 12:29:15] - [service] seo optimization applied to index.cache.html
+[INFO] - [2025-11-08 12:29:15] - [service] pwa manifest applied to site.cache.webmanifest
