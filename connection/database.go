@@ -90,6 +90,7 @@ func ConnectDatabase() *sql.DB {
 	CreateInvitationTable(db)
 	CreateRedeemTable(db)
 	CreateBroadcastTable(db)
+	CreatePaymentOrderTable(db)
 	CreateOAuthTable(db)
 
 	if err := doMigration(db); err != nil {
@@ -303,16 +304,44 @@ func CreateRedeemTable(db *sql.DB) {
 }
 
 func CreateBroadcastTable(db *sql.DB) {
-	_, err := globals.ExecDb(db, `
-		CREATE TABLE IF NOT EXISTS broadcast (
-		  id INT PRIMARY KEY AUTO_INCREMENT,
-		  poster_id INT,
-		  content TEXT,
-		  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-		  FOREIGN KEY (poster_id) REFERENCES auth(id)
-		);
-	`)
-	if err != nil {
-		fmt.Println(err)
-	}
+    _, err := globals.ExecDb(db, `
+        CREATE TABLE IF NOT EXISTS broadcast (
+          id INT PRIMARY KEY AUTO_INCREMENT,
+          poster_id INT,
+          content TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (poster_id) REFERENCES auth(id)
+        );
+    `)
+    if err != nil {
+        fmt.Println(err)
+    }
+}
+
+func CreatePaymentOrderTable(db *sql.DB) {
+    _, err := globals.ExecDb(db, `
+        CREATE TABLE IF NOT EXISTS payment_order (
+          id INT PRIMARY KEY AUTO_INCREMENT,
+          order_no VARCHAR(64) UNIQUE,
+          trade_no VARCHAR(128),
+          user_id INT,
+          gateway VARCHAR(32),
+          amount DECIMAL(16, 2),
+          currency VARCHAR(8) DEFAULT 'CNY',
+          subject VARCHAR(255),
+          body TEXT,
+          status VARCHAR(16),
+          metadata TEXT,
+          created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          paid_at DATETIME,
+          refunded_at DATETIME,
+          expires_at DATETIME,
+          INDEX idx_user (user_id),
+          INDEX idx_gateway_status (gateway, status)
+        );
+    `)
+    if err != nil {
+        fmt.Println(err)
+    }
 }

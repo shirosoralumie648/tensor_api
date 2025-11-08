@@ -7,6 +7,15 @@ func Register(app *gin.RouterGroup) {
     app.GET("/feature/info", GetFeatureInfo)
     app.GET("/attachments/:hash", AttachmentService)
 
+    // payment notify
+    app.POST("/payment/notify/yipay", YiPayNotify)
+    app.POST("/payment/notify/wechat", WechatNotify)
+    app.POST("/payment/notify/alipay", AlipayNotify)
+    app.POST("/payment/notify/stripe", StripeNotify)
+
+    // payment order
+    app.POST("/payment/order/create", CreatePaymentOrder)
+
     app.GET("/admin/channel/list", GetChannelList)
     app.POST("/admin/channel/create", CreateChannel)
     app.GET("/admin/channel/get/:id", GetChannel)
@@ -28,6 +37,14 @@ func Register(app *gin.RouterGroup) {
 
     app.GET("/admin/feature/view", GetFeatureConfig)
     app.POST("/admin/feature/update", UpdateFeatureConfig)
+
+    // payment admin
+    app.GET("/admin/payment/config/view", GetPaymentConfig)
+    app.POST("/admin/payment/config/update", UpdatePaymentConfig)
+    app.GET("/admin/payment/orders", ListPaymentOrders)
+    app.GET("/admin/payment/order/:orderNo", GetPaymentOrder)
+    app.GET("/admin/payment/order/sync/:orderNo", SyncPaymentOrder)
+    app.POST("/admin/payment/order/refund/:orderNo", RefundPaymentOrder)
 
     app.GET("/admin/plan/view", GetPlanConfig)
     app.POST("/admin/plan/update", UpdatePlanConfig)

@@ -89,3 +89,13 @@
 [WARNING] - [2025-11-08 17:09:49] - [web] failed to get search result: invalid character 'P' looking for beginning of value (query: 测试)
 [WARNING] - [2025-11-08 17:10:31] - [web] failed to get search result: invalid character 'P' looking for beginning of value (query: 测试)
 [WARNING] - [2025-11-08 17:10:31] - cannot find channel for model gpt-4 (model: gpt-4, client: 172.18.0.1)
+[DEBUG] - [2025-11-08 17:53:09] - [connection] connected to mysql server (host: mysql)
+[DEBUG] - [2025-11-08 17:53:09] - [service] 1 user(s) found, skip creating root user
+[DEBUG] - [2025-11-08 17:53:09] - [connection] connected to redis (host: redis)
+[INFO] - [2025-11-08 17:53:09] - [service] seo optimization applied to index.cache.html
+[INFO] - [2025-11-08 17:53:09] - [service] pwa manifest applied to site.cache.webmanifest
+[DEBUG] - [2025-11-08 17:59:47] - [connection] connected to mysql server (host: mysql)
+[DEBUG] - [2025-11-08 17:59:47] - [service] 1 user(s) found, skip creating root user
+[DEBUG] - [2025-11-08 17:59:47] - [connection] connected to redis (host: redis)
+[INFO] - [2025-11-08 17:59:47] - [service] seo optimization applied to index.cache.html
+[INFO] - [2025-11-08 17:59:47] - [service] pwa manifest applied to site.cache.webmanifest

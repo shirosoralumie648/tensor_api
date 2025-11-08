@@ -35,6 +35,10 @@ const Subscription = lazyFactor(
 );
 const Logger = lazyFactor(() => import("@/routes/admin/Logger.tsx"));
 const Feature = lazyFactor(() => import("@/routes/admin/Feature.tsx"));
+const Payment = lazyFactor(() => import("@/routes/admin/Payment.tsx"));
+const PaymentOrders = lazyFactor(
+  () => import("@/routes/admin/PaymentOrders.tsx"),
+);
 
 const router = createBrowserRouter(
   [
@@ -227,6 +231,24 @@ const router = createBrowserRouter(
           element: (
             <Suspense>
               <Logger />
+            </Suspense>
+          ),
+        },
+        {
+          id: "admin-payment",
+          path: "payment",
+          element: (
+            <Suspense>
+              <Payment />
+            </Suspense>
+          ),
+        },
+        {
+          id: "admin-payment-orders",
+          path: "payment/orders",
+          element: (
+            <Suspense>
+              <PaymentOrders />
             </Suspense>
           ),
         },
