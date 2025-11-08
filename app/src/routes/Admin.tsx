@@ -12,7 +12,7 @@ function Admin() {
   const admin = useSelector(selectAdmin);
 
   useEffect(() => {
-    if (init && !admin) router.navigate("/app");
+    if (init && !admin) router.navigate("/workspace");
   }, [init]);
 
   return (

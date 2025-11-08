@@ -154,7 +154,7 @@ export default function Settings() {
             </div>
           </div>
           <div>
-            <Button onClick={onSave} loading={saving}>
+            <Button onClick={onSave} loading={saving} variant={`brand`}>
               保存
             </Button>
           </div>
@@ -195,7 +195,7 @@ export default function Settings() {
             <Input type={`password`} value={repwd} onChange={(e) => setRepwd(e.target.value)} placeholder={`再次输入`} />
           </div>
           <div>
-            <Button onClick={onChangePassword} loading={pwdSaving}>确认修改</Button>
+            <Button onClick={onChangePassword} loading={pwdSaving} variant={`brand`}>确认修改</Button>
           </div>
         </CardContent>
       </Card>

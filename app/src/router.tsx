@@ -386,7 +386,7 @@ export function AuthForbidden({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (init && authenticated) {
-      navigate("/app", { state: { from: location.pathname } });
+      navigate("/workspace", { state: { from: location.pathname } });
     }
   }, [init, authenticated]);
 
@@ -401,7 +401,7 @@ export function AdminRequired({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (init && !admin) {
-      navigate("/app", { state: { from: location.pathname } });
+      navigate("/workspace", { state: { from: location.pathname } });
     }
   }, [init, admin]);
 

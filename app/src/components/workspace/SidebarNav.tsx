@@ -1,6 +1,6 @@
 import { cn } from "@/components/ui/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectAdmin, selectAuthenticated } from "@/store/auth";
 import {
@@ -28,10 +28,12 @@ function NavItem({
   className?: string;
 }) {
   const nav = useNavigate();
+  const { pathname } = useLocation();
+  const active = pathname === to;
   return (
     <Button
       variant="ghost"
-      className={cn("w-full justify-start gap-2", className)}
+      className={cn("w-full justify-start gap-2", active && "brand-border rounded-md", className)}
       onClick={() => nav(to)}
     >
       <Icon className="h-4 w-4" />
