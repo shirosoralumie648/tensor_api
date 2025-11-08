@@ -51,3 +51,9 @@
 [DEBUG] - [2025-11-08 12:29:15] - [connection] connected to redis (host: redis)
 [INFO] - [2025-11-08 12:29:15] - [service] seo optimization applied to index.cache.html
 [INFO] - [2025-11-08 12:29:15] - [service] pwa manifest applied to site.cache.webmanifest
+[WARNING] - [2025-11-08 14:05:36] - [connection] failed to connect to mysql server: mysql (message: dial tcp 172.18.0.3:3306: connect: connection refused), will retry in 5 seconds
+[DEBUG] - [2025-11-08 14:05:41] - [connection] connected to mysql server (host: mysql)
+[DEBUG] - [2025-11-08 14:05:41] - [service] 1 user(s) found, skip creating root user
+[DEBUG] - [2025-11-08 14:05:41] - [connection] connected to redis (host: redis)
+[INFO] - [2025-11-08 14:05:41] - [service] seo optimization applied to index.cache.html
+[INFO] - [2025-11-08 14:05:41] - [service] pwa manifest applied to site.cache.webmanifest
