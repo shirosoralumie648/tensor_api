@@ -17,9 +17,13 @@ import {
   getModelChart,
   getRequestChart,
   getUserTypeChart,
+  getRevenueByGateway,
+  getRevenueByPlan,
 } from "@/admin/api/chart.ts";
 import ModelUsageChart from "@/components/admin/assemblies/ModelUsageChart.tsx";
 import UserTypeChart from "@/components/admin/assemblies/UserTypeChart.tsx";
+import RevenueGatewayChart from "@/components/admin/assemblies/RevenueGatewayChart.tsx";
+import RevenuePlanChart from "@/components/admin/assemblies/RevenuePlanChart.tsx";
 
 function ChartBox() {
   const [model, setModel] = useState<ModelChartResponse>({
@@ -51,12 +55,19 @@ function ChartBox() {
     pro_plan: 0,
   });
 
+  const [revenueGateway, setRevenueGateway] = useState<{ name: string; amount: number }[]>(
+    [],
+  );
+  const [revenuePlan, setRevenuePlan] = useState<{ name: string; amount: number }[]>([]);
+
   useEffectAsync(async () => {
     setModel(await getModelChart());
     setRequest(await getRequestChart());
     setBilling(await getBillingChart());
     setError(await getErrorChart());
     setUser(await getUserTypeChart());
+    setRevenueGateway((await getRevenueByGateway(30)).data || []);
+    setRevenuePlan((await getRevenueByPlan(30)).data || []);
   }, []);
 
   return (
@@ -78,6 +89,12 @@ function ChartBox() {
       </div>
       <div className={`chart-box`}>
         <ErrorChart labels={error.date} datasets={error.value} />
+      </div>
+      <div className={`chart-box`}>
+        <RevenueGatewayChart data={revenueGateway} />
+      </div>
+      <div className={`chart-box`}>
+        <RevenuePlanChart data={revenuePlan} />
       </div>
     </div>
   );
