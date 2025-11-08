@@ -2,7 +2,7 @@
 # License: Apache-2.0
 # Description: Dockerfile for chatnio
 
-FROM --platform=$TARGETPLATFORM golang:1.20-alpine AS backend
+FROM --platform=$TARGETPLATFORM golang:1.24-alpine AS backend
 
 WORKDIR /backend
 COPY . .
@@ -20,10 +20,11 @@ RUN apk update && \
     musl-dev \
     g++ \
     make \
-    linux-headers
+    linux-headers \
+    libwebp-dev
 
-# Build backend
-RUN go build -o chat -a -ldflags="-extldflags=-static" .
+# Build backend (disable static linking to avoid CGO static issues)
+RUN go mod tidy && go build -o chat -a .
 
 FROM node:18 AS frontend
 
@@ -40,7 +41,7 @@ FROM alpine
 
 # Install dependencies
 RUN apk upgrade --no-cache && \
-    apk add --no-cache wget ca-certificates tzdata && \
+    apk add --no-cache wget ca-certificates tzdata libwebp && \
     update-ca-certificates 2>/dev/null || true
 
 # Set timezone
