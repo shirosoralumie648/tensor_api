@@ -19,6 +19,7 @@ import {
   ListStart,
   Plug,
   Shield,
+  Settings,
 } from "lucide-react";
 import { openDialog as openSub } from "@/store/subscription.ts";
 import { openDialog as openInvitationDialog } from "@/store/invitation.ts";
@@ -78,6 +79,10 @@ function MenuBar({ children, className }: MenuBarProps) {
         <DropdownMenuItem onClick={() => dispatch(openApiDialog())}>
           <Plug className={`h-4 w-4 mr-1`} />
           {t("api.title")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => router.navigate("/settings")}>
+          <Settings className={`h-4 w-4 mr-1`} />
+          {t("settings.title") || "设置"}
         </DropdownMenuItem>
         {admin && (
           <DropdownMenuItem onClick={() => router.navigate("/admin")}>
