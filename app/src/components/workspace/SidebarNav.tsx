@@ -4,13 +4,15 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { selectAdmin, selectAuthenticated } from "@/store/auth";
 import {
-  Home as HomeIcon,
-  Settings as SettingsIcon,
-  LayoutPanelLeft,
   MessageSquare,
-  Zap,
-  FileText,
-  Share2,
+  Image as ImageIcon,
+  Waveform,
+  Video as VideoIcon,
+  BookOpen,
+  CircuitBoard,
+  Bot,
+  Store,
+  Settings as SettingsIcon,
   Gauge,
 } from "lucide-react";
 
@@ -44,17 +46,19 @@ export default function SidebarNav() {
 
   return (
     <div className="space-y-1">
-      <div className="text-xs text-muted-foreground px-2 mb-1">Workspace</div>
-      <NavItem to="/workspace" icon={MessageSquare} label="Chat" />
-      <NavItem to="/generate" icon={Zap} label="Generation" />
-      <NavItem to="/article" icon={FileText} label="Article" />
-      <NavItem to="/share/demo" icon={Share2} label="Sharing" />
+      <div className="text-xs text-muted-foreground px-2 mb-1">功能</div>
+      <NavItem to="/workspace" icon={MessageSquare} label="对话" />
+      <NavItem to="/generate" icon={ImageIcon} label="绘图" />
+      <NavItem to="/workspace/tts" icon={Waveform} label="语音生成" />
+      <NavItem to="/workspace/video" icon={VideoIcon} label="视频生成" />
+      <NavItem to="/workspace/kb" icon={BookOpen} label="知识库" />
+      <NavItem to="/workspace/mcp" icon={CircuitBoard} label="MCP" />
+      <NavItem to="/workspace/agents" icon={Bot} label="智能体" />
+      <NavItem to="/workspace/prompts" icon={Store} label="Prompt 市场" />
       <div className="pt-2">
-        <div className="text-xs text-muted-foreground px-2 mb-1">General</div>
-        <NavItem to={authed ? "/settings" : "/login"} icon={SettingsIcon} label="Settings" />
-        {isAdmin && (
-          <NavItem to="/admin" icon={Gauge} label="Admin" />
-        )}
+        <div className="text-xs text-muted-foreground px-2 mb-1">系统</div>
+        <NavItem to={authed ? "/settings" : "/login"} icon={SettingsIcon} label="设置" />
+        {isAdmin && <NavItem to="/admin" icon={Gauge} label="管理后台" />}
       </div>
     </div>
   );
