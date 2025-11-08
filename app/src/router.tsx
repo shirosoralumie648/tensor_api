@@ -10,6 +10,7 @@ import Auth from "./routes/Auth.tsx";
 import React, { Suspense, useEffect } from "react";
 import { useDeeptrain } from "@/conf/env.ts";
 import Landing from "./routes/Landing.tsx";
+import OAuthCallback from "./routes/OAuthCallback.tsx";
 import Register from "@/routes/Register.tsx";
 import Forgot from "@/routes/Forgot.tsx";
 import { lazyFactor } from "@/utils/loader.tsx";
@@ -59,6 +60,12 @@ const router = createBrowserRouter(
           <Auth />
         </AuthForbidden>
       ),
+      ErrorBoundary: NotFound,
+    },
+    {
+      id: "oauth-callback",
+      path: "/oauth/callback",
+      element: <OAuthCallback />,
       ErrorBoundary: NotFound,
     },
     !useDeeptrain &&

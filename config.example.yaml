@@ -30,3 +30,16 @@ system:
   search:
     endpoint: https://duckduckgo-api.vercel.app
     query: 5
+oauth:
+  github:
+    client_id: ""
+    client_secret: ""
+  google:
+    client_id: ""
+    client_secret: ""
+  wechat:
+    app_id: ""
+    app_secret: ""
+  qq:
+    app_id: ""
+    app_secret: ""

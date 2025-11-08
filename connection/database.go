@@ -90,6 +90,7 @@ func ConnectDatabase() *sql.DB {
 	CreateInvitationTable(db)
 	CreateRedeemTable(db)
 	CreateBroadcastTable(db)
+	CreateOAuthTable(db)
 
 	if err := doMigration(db); err != nil {
 		fmt.Println(fmt.Sprintf("migration error: %s", err))
