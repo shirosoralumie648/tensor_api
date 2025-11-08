@@ -36,6 +36,22 @@ func doMigration(db *sql.DB) error {
 		return doSqliteMigration(db)
 	}
 
+	// create oauth binding table (safe if exists)
+	if err := execSql(db, `
+		CREATE TABLE IF NOT EXISTS oauth (
+			id INT PRIMARY KEY AUTO_INCREMENT,
+			provider VARCHAR(32) NOT NULL,
+			open_id VARCHAR(255) NOT NULL,
+			union_id VARCHAR(255),
+			user_id INT NOT NULL,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			UNIQUE KEY (provider, open_id),
+			FOREIGN KEY (user_id) REFERENCES auth(id)
+		);
+	`); err != nil {
+		return err
+	}
+
 	// v3.10 migration
 
 	// update `quota`, `used` field in `quota` table

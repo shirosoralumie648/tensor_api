@@ -10,7 +10,7 @@ import router from "@/router.tsx";
 import { useTranslation } from "react-i18next";
 import { getQueryParam } from "@/utils/path.ts";
 import { setMemory } from "@/utils/memory.ts";
-import { appLogo, appName, useDeeptrain } from "@/conf/env.ts";
+import { appLogo, appName, useDeeptrain, backendEndpoint } from "@/conf/env.ts";
 import { Card, CardContent } from "@/components/ui/card.tsx";
 import { goAuth } from "@/utils/app.ts";
 import { Label } from "@/components/ui/label.tsx";
@@ -142,6 +142,10 @@ function Login() {
     }
   };
 
+  const goOAuth = (provider: string) => {
+    location.href = `${backendEndpoint}/oauth/${provider}`;
+  };
+
   useEffect(() => {
     // listen to enter key and auto submit
     const listener = async (e: KeyboardEvent) => {
@@ -201,6 +205,21 @@ function Login() {
             <Button onClick={onSubmit} className={`mt-2`} loading={true}>
               {t("login")}
             </Button>
+
+            <div className={`mt-3 grid grid-cols-2 gap-2`}>
+              <Button variant={`outline`} onClick={() => goOAuth("wechat")}>
+                WeChat 登录
+              </Button>
+              <Button variant={`outline`} onClick={() => goOAuth("qq")}>
+                QQ 登录
+              </Button>
+              <Button variant={`outline`} onClick={() => goOAuth("google")}>
+                Google 登录
+              </Button>
+              <Button variant={`outline`} onClick={() => goOAuth("github")}>
+                GitHub 登录
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
