@@ -5,6 +5,7 @@ import (
 	"chat/globals"
 	"chat/utils"
 	"database/sql"
+	"encoding/json"
 	"github.com/go-redis/redis/v8"
 	"time"
 )
@@ -16,6 +17,132 @@ type UserTypeForm struct {
 	StandardPlan int64 `json:"standard_plan"`
 	ProPlan      int64 `json:"pro_plan"`
 	Total        int64 `json:"total"`
+}
+
+// Group by gateway: net amount per gateway in last N days
+func GetRevenueGroupByGateway(db *sql.DB, days int) RevenueGroupForm {
+    if days <= 0 {
+        days = 30
+    }
+    dates := getDays(days)
+    start := time.Date(dates[0].Year(), dates[0].Month(), dates[0].Day(), 0, 0, 0, 0, dates[0].Location())
+    end := time.Date(dates[len(dates)-1].Year(), dates[len(dates)-1].Month(), dates[len(dates)-1].Day(), 0, 0, 0, 0, dates[len(dates)-1].Location()).AddDate(0, 0, 1)
+
+    paid := map[string]float64{}
+    refunded := map[string]float64{}
+
+    if rows, err := globals.QueryDb(db, `
+        SELECT gateway, COALESCE(SUM(amount), 0) AS total
+        FROM payment_order
+        WHERE status = 'paid' AND paid_at >= ? AND paid_at < ?
+        GROUP BY gateway
+    `, start, end); err == nil {
+        for rows.Next() {
+            var gateway string
+            var total float64
+            if err := rows.Scan(&gateway, &total); err == nil {
+                paid[gateway] += total
+            }
+        }
+        rows.Close()
+    }
+
+    if rows, err := globals.QueryDb(db, `
+        SELECT gateway, COALESCE(SUM(amount), 0) AS total
+        FROM payment_order
+        WHERE status = 'refunded' AND refunded_at >= ? AND refunded_at < ?
+        GROUP BY gateway
+    `, start, end); err == nil {
+        for rows.Next() {
+            var gateway string
+            var total float64
+            if err := rows.Scan(&gateway, &total); err == nil {
+                refunded[gateway] += total
+            }
+        }
+        rows.Close()
+    }
+
+    // union of keys
+    items := make([]RevenueGroupItem, 0)
+    keys := map[string]struct{}{}
+    for k := range paid { keys[k] = struct{}{} }
+    for k := range refunded { keys[k] = struct{}{} }
+    for k := range keys {
+        net := paid[k] - refunded[k]
+        if net < 0 {
+            net = 0 // avoid negative, optional
+        }
+        items = append(items, RevenueGroupItem{Name: k, Amount: float32(net)})
+    }
+    return RevenueGroupForm{Data: items}
+}
+
+// Group by plan in metadata (fallback to subject)
+func GetRevenueGroupByPlan(db *sql.DB, days int) RevenueGroupForm {
+    if days <= 0 {
+        days = 30
+    }
+    dates := getDays(days)
+    start := time.Date(dates[0].Year(), dates[0].Month(), dates[0].Day(), 0, 0, 0, 0, dates[0].Location())
+    end := time.Date(dates[len(dates)-1].Year(), dates[len(dates)-1].Month(), dates[len(dates)-1].Day(), 0, 0, 0, 0, dates[len(dates)-1].Location()).AddDate(0, 0, 1)
+
+    type row struct { plan string; amount float64 }
+    paid := map[string]float64{}
+    refunded := map[string]float64{}
+
+    // helper to extract plan
+    extract := func(meta string, subject string) string {
+        var m map[string]interface{}
+        if err := json.Unmarshal([]byte(meta), &m); err == nil && m != nil {
+            if v, ok := m["plan"]; ok {
+                if s, ok2 := v.(string); ok2 && s != "" { return s }
+            }
+        }
+        if subject != "" { return subject }
+        return "unknown"
+    }
+
+    if rows, err := globals.QueryDb(db, `
+        SELECT metadata, subject, amount FROM payment_order
+        WHERE status = 'paid' AND paid_at >= ? AND paid_at < ?
+    `, start, end); err == nil {
+        for rows.Next() {
+            var meta, subject string
+            var amount float64
+            if err := rows.Scan(&meta, &subject, &amount); err == nil {
+                key := extract(meta, subject)
+                paid[key] += amount
+            }
+        }
+        rows.Close()
+    }
+
+    if rows, err := globals.QueryDb(db, `
+        SELECT metadata, subject, amount FROM payment_order
+        WHERE status = 'refunded' AND refunded_at >= ? AND refunded_at < ?
+    `, start, end); err == nil {
+        for rows.Next() {
+            var meta, subject string
+            var amount float64
+            if err := rows.Scan(&meta, &subject, &amount); err == nil {
+                key := extract(meta, subject)
+                refunded[key] += amount
+            }
+        }
+        rows.Close()
+    }
+
+    items := make([]RevenueGroupItem, 0)
+    keys := map[string]struct{}{}
+    for k := range paid { keys[k] = struct{}{} }
+    for k := range refunded { keys[k] = struct{}{} }
+    for k := range keys {
+        net := paid[k] - refunded[k]
+        if net < 0 { net = 0 }
+        items = append(items, RevenueGroupItem{Name: k, Amount: float32(net)})
+    }
+    return RevenueGroupForm{Data: items}
 }
 
 func getDates(t []time.Time) []string {
@@ -147,4 +274,110 @@ func GetUserTypeData(db *sql.DB) (UserTypeForm, error) {
 	form.ApiPaid = form.Total - form.Normal - form.BasicPlan - form.StandardPlan - form.ProPlan
 
 	return form, nil
+}
+
+// ===== Revenue (from payment_order) =====
+// Net revenue = paid amount - refunded amount
+
+func GetRevenueToday(db *sql.DB) float32 {
+	now := time.Now()
+	start := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	end := start.Add(24 * time.Hour)
+
+	var paid float64
+	var refunded float64
+
+	_ = globals.QueryRowDb(db, `
+		SELECT COALESCE(SUM(amount), 0)
+		FROM payment_order
+		WHERE status = 'paid' AND paid_at >= ? AND paid_at < ?
+	`, start, end).Scan(&paid)
+
+	_ = globals.QueryRowDb(db, `
+		SELECT COALESCE(SUM(amount), 0)
+		FROM payment_order
+		WHERE status = 'refunded' AND refunded_at >= ? AND refunded_at < ?
+	`, start, end).Scan(&refunded)
+
+	return float32(paid - refunded)
+}
+
+func GetRevenueMonth(db *sql.DB) float32 {
+	now := time.Now()
+	start := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	end := start.AddDate(0, 1, 0)
+
+	var paid float64
+	var refunded float64
+
+	_ = globals.QueryRowDb(db, `
+		SELECT COALESCE(SUM(amount), 0)
+		FROM payment_order
+		WHERE status = 'paid' AND paid_at >= ? AND paid_at < ?
+	`, start, end).Scan(&paid)
+
+	_ = globals.QueryRowDb(db, `
+		SELECT COALESCE(SUM(amount), 0)
+		FROM payment_order
+		WHERE status = 'refunded' AND refunded_at >= ? AND refunded_at < ?
+	`, start, end).Scan(&refunded)
+
+	return float32(paid - refunded)
+}
+
+func GetRevenueChart(db *sql.DB, days int) BillingChartForm {
+	if days <= 0 {
+		days = 30
+	}
+	dates := getDays(days)
+	// [start, end)
+	start := time.Date(dates[0].Year(), dates[0].Month(), dates[0].Day(), 0, 0, 0, 0, dates[0].Location())
+	end := time.Date(dates[len(dates)-1].Year(), dates[len(dates)-1].Month(), dates[len(dates)-1].Day(), 0, 0, 0, 0, dates[len(dates)-1].Location()).AddDate(0, 0, 1)
+
+	mPaid := map[string]float64{}
+	mRefund := map[string]float64{}
+
+	// aggregate paid by day
+	if rows, err := globals.QueryDb(db, `
+		SELECT paid_at, amount FROM payment_order
+		WHERE status = 'paid' AND paid_at >= ? AND paid_at < ?
+	`, start, end); err == nil {
+		for rows.Next() {
+			var paidAt []uint8
+			var amount float64
+			if err := rows.Scan(&paidAt, &amount); err == nil {
+				d := utils.ConvertTime(paidAt).Format("2006-01-02")
+				mPaid[d] += amount
+			}
+		}
+		rows.Close()
+	}
+
+	// aggregate refunded by day
+	if rows, err := globals.QueryDb(db, `
+		SELECT refunded_at, amount FROM payment_order
+		WHERE status = 'refunded' AND refunded_at >= ? AND refunded_at < ?
+	`, start, end); err == nil {
+		for rows.Next() {
+			var refundedAt []uint8
+			var amount float64
+			if err := rows.Scan(&refundedAt, &amount); err == nil {
+				d := utils.ConvertTime(refundedAt).Format("2006-01-02")
+				mRefund[d] += amount
+			}
+		}
+		rows.Close()
+	}
+
+	values := make([]float32, len(dates))
+	for i, d := range dates {
+		key := getFormat(d)
+		net := mPaid[key] - mRefund[key]
+		values[i] = float32(net)
+	}
+
+	return BillingChartForm{
+		Date:  getDates(dates),
+		Value: values,
+	}
 }

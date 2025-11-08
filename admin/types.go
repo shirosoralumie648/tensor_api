@@ -33,6 +33,15 @@ type ErrorChartForm struct {
 	Value []int64  `json:"value"`
 }
 
+type RevenueGroupItem struct {
+	Name   string  `json:"name"`
+	Amount float32 `json:"amount"`
+}
+
+type RevenueGroupForm struct {
+	Data []RevenueGroupItem `json:"data"`
+}
+
 type PaginationForm struct {
 	Status  bool          `json:"status"`
 	Total   int           `json:"total"`

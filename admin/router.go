@@ -18,6 +18,8 @@ func Register(app *gin.RouterGroup) {
 	app.GET("/admin/analytics/billing", BillingAnalysisAPI)
 	app.GET("/admin/analytics/error", ErrorAnalysisAPI)
 	app.GET("/admin/analytics/user", UserTypeAnalysisAPI)
+	app.GET("/admin/analytics/revenue_gateway", RevenueGatewayAnalysisAPI)
+	app.GET("/admin/analytics/revenue_plan", RevenuePlanAnalysisAPI)
 
 	app.GET("/admin/invitation/list", InvitationPaginationAPI)
 	app.POST("/admin/invitation/generate", GenerateInvitationAPI)
