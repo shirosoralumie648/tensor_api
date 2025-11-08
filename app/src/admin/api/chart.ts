@@ -10,6 +10,7 @@ import {
   RequestChartResponse,
   UserResponse,
   UserTypeChartResponse,
+  RevenueGroupResponse,
 } from "@/admin/types.ts";
 import axios from "axios";
 import { getErrorMessage } from "@/utils/base.ts";
@@ -21,6 +22,34 @@ export async function getAdminInfo(): Promise<InfoResponse> {
   } catch (e) {
     console.warn(e);
     return { subscription_count: 0, billing_today: 0, billing_month: 0 };
+  }
+}
+
+export async function getRevenueByGateway(
+  days: number = 30,
+): Promise<RevenueGroupResponse> {
+  try {
+    const response = await axios.get(
+      `/admin/analytics/revenue_gateway?days=${days}`,
+    );
+    return response.data as RevenueGroupResponse;
+  } catch (e) {
+    console.warn(e);
+    return { data: [] } as RevenueGroupResponse;
+  }
+}
+
+export async function getRevenueByPlan(
+  days: number = 30,
+): Promise<RevenueGroupResponse> {
+  try {
+    const response = await axios.get(
+      `/admin/analytics/revenue_plan?days=${days}`,
+    );
+    return response.data as RevenueGroupResponse;
+  } catch (e) {
+    console.warn(e);
+    return { data: [] } as RevenueGroupResponse;
   }
 }
 

@@ -94,12 +94,10 @@ func UpdateMarketAPI(c *gin.Context) {
 
 func InfoAPI(c *gin.Context) {
 	db := utils.GetDBFromContext(c)
-	cache := utils.GetCacheFromContext(c)
-
 	c.JSON(http.StatusOK, InfoForm{
 		SubscriptionCount: GetSubscriptionUsers(db),
-		BillingToday:      GetBillingToday(cache),
-		BillingMonth:      GetBillingMonth(cache),
+		BillingToday:      GetRevenueToday(db),
+		BillingMonth:      GetRevenueMonth(db),
 	})
 }
 
@@ -114,8 +112,26 @@ func RequestAnalysisAPI(c *gin.Context) {
 }
 
 func BillingAnalysisAPI(c *gin.Context) {
-	cache := utils.GetCacheFromContext(c)
-	c.JSON(http.StatusOK, GetBillingData(cache))
+	db := utils.GetDBFromContext(c)
+	c.JSON(http.StatusOK, GetRevenueChart(db, 30))
+}
+
+func RevenueGatewayAnalysisAPI(c *gin.Context) {
+	db := utils.GetDBFromContext(c)
+	days := utils.ParseInt(c.Query("days"))
+	if days <= 0 {
+		days = 30
+	}
+	c.JSON(http.StatusOK, GetRevenueGroupByGateway(db, days))
+}
+
+func RevenuePlanAnalysisAPI(c *gin.Context) {
+	db := utils.GetDBFromContext(c)
+	days := utils.ParseInt(c.Query("days"))
+	if days <= 0 {
+		days = 30
+	}
+	c.JSON(http.StatusOK, GetRevenueGroupByPlan(db, days))
 }
 
 func ErrorAnalysisAPI(c *gin.Context) {

@@ -99,3 +99,15 @@
 [DEBUG] - [2025-11-08 17:59:47] - [connection] connected to redis (host: redis)
 [INFO] - [2025-11-08 17:59:47] - [service] seo optimization applied to index.cache.html
 [INFO] - [2025-11-08 17:59:47] - [service] pwa manifest applied to site.cache.webmanifest
+[DEBUG] - [2025-11-08 22:39:48] - [connection] connected to mysql server (host: mysql)
+[DEBUG] - [2025-11-08 22:39:49] - [service] 1 user(s) found, skip creating root user
+[DEBUG] - [2025-11-08 22:39:49] - [connection] connected to redis (host: redis)
+[INFO] - [2025-11-08 22:39:49] - [service] seo optimization applied to index.cache.html
+[INFO] - [2025-11-08 22:39:49] - [service] pwa manifest applied to site.cache.webmanifest
+[WARNING] - [2025-11-09 00:43:41] - [connection] failed to connect to mysql server: mysql (message: dial tcp 172.18.0.3:3306: connect: connection refused), will retry in 5 seconds
+[WARNING] - [2025-11-09 00:43:46] - [connection] failed to connect to mysql server: mysql (message: dial tcp 172.18.0.3:3306: connect: connection refused), will retry in 5 seconds
+[DEBUG] - [2025-11-09 00:43:51] - [connection] connected to mysql server (host: mysql)
+[DEBUG] - [2025-11-09 00:43:51] - [service] 1 user(s) found, skip creating root user
+[DEBUG] - [2025-11-09 00:43:51] - [connection] connected to redis (host: redis)
+[INFO] - [2025-11-09 00:43:51] - [service] seo optimization applied to index.cache.html
+[INFO] - [2025-11-09 00:43:51] - [service] pwa manifest applied to site.cache.webmanifest

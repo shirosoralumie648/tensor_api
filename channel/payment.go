@@ -119,9 +119,10 @@ func UpdateOrderStatus(orderNo, status, tradeNo string) error {
 	_, err := globals.ExecDb(connection.DB, `
 		UPDATE payment_order
 		SET status = ?, trade_no = COALESCE(?, trade_no), updated_at = CURRENT_TIMESTAMP,
-		    paid_at = CASE WHEN ? = 'paid' THEN CURRENT_TIMESTAMP ELSE paid_at END
+		    paid_at = CASE WHEN ? = 'paid' THEN CURRENT_TIMESTAMP ELSE paid_at END,
+		    refunded_at = CASE WHEN ? = 'refunded' THEN CURRENT_TIMESTAMP ELSE refunded_at END
 		WHERE order_no = ?
-	`, status, nullIfEmpty(tradeNo), status, orderNo)
+	`, status, nullIfEmpty(tradeNo), status, status, orderNo)
 	return err
 }
 

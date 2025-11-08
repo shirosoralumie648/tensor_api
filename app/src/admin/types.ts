@@ -120,3 +120,12 @@ export type UserResponse = {
   data: UserData[];
   total: number;
 };
+
+export type RevenueGroupItem = {
+  name: string;
+  amount: number;
+};
+
+export type RevenueGroupResponse = {
+  data: RevenueGroupItem[];
+};
