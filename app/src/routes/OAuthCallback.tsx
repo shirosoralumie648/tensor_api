@@ -11,8 +11,15 @@ export default function OAuthCallback() {
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const jwt = (params.get("jwt") || "").trim();
+    const bind = (params.get("bind") || "").trim();
+    const ok = (params.get("ok") || "").trim();
     if (!jwt) {
-      navigate("/login");
+      if (bind) {
+        // binding flow finished, go back to settings
+        navigate("/settings?bind=" + encodeURIComponent(bind) + (ok ? "&ok=" + ok : ""));
+      } else {
+        navigate("/login");
+      }
       return;
     }
 
