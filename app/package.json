@@ -38,7 +38,7 @@
     "@reduxjs/toolkit": "^1.9.5",
     "@tanem/react-nprogress": "^5.0.51",
     "@tremor/react": "^3.14.0",
-    "axios": "^1.5.0",
+    "axios": "^1.12.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "cmdk": "^0.2.0",
@@ -48,7 +48,7 @@
     "localforage": "^1.10.0",
     "lucide-react": "^0.309.0",
     "match-sorter": "^6.3.1",
-    "mermaid": "^10.9.0",
+    "mermaid": "^10.9.4",
     "next-themes": "^0.2.1",
     "react": "^18.2.0",
     "react-beautiful-dnd": "^13.1.1",
@@ -93,7 +93,7 @@
     "prettier": "^3.0.3",
     "tailwindcss": "^3.3.3",
     "typescript": "^5.0.2",
-    "vite": "^4.4.5",
+    "vite": "^5.4.21",
     "vite-plugin-html": "^3.2.0"
   }
 }
