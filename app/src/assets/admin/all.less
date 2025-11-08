@@ -23,6 +23,30 @@
 }
 
 
+.user-interface,
+.market,
+.broadcast,
+.channel,
+.charge,
+.system,
+.logger,
+.admin-subscription {
+  width: 100%;
+  min-height: max-content;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+
+  & > .admin-card {
+    margin-bottom: 1rem;
+  }
+
+  & > .admin-card:last-child {
+    margin-bottom: 0;
+  }
+}
+
+
 @media (max-width: 768px) {
   .admin-card {
     border-radius: 0 !important;
