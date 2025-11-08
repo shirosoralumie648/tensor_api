@@ -11,6 +11,7 @@ import React, { Suspense, useEffect } from "react";
 import { useDeeptrain } from "@/conf/env.ts";
 import Landing from "./routes/Landing.tsx";
 import OAuthCallback from "./routes/OAuthCallback.tsx";
+import Settings from "./routes/Settings.tsx";
 import Register from "@/routes/Register.tsx";
 import Forgot from "@/routes/Forgot.tsx";
 import { lazyFactor } from "@/utils/loader.tsx";
@@ -40,6 +41,18 @@ const router = createBrowserRouter(
       id: "home",
       path: "/",
       element: <Landing />,
+      ErrorBoundary: NotFound,
+    },
+    {
+      id: "settings",
+      path: "/settings",
+      element: (
+        <AuthRequired>
+          <Suspense>
+            <Settings />
+          </Suspense>
+        </AuthRequired>
+      ),
       ErrorBoundary: NotFound,
     },
     {

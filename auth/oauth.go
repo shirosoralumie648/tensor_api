@@ -58,7 +58,14 @@ func OAuthStart(c *gin.Context) {
 	provider := strings.ToLower(c.Param("provider"))
 	state := utils.GenerateChar(24)
 	cache := utils.GetCacheFromContext(c)
-	setOAuthState(c, cache, state, provider)
+	// support binding mode: append "|bind|<token>" into state storage value
+	bindMode := c.Query("bind") == "1" || strings.ToLower(c.Query("mode")) == "bind"
+	token := strings.TrimSpace(c.Query("token"))
+	value := provider
+	if bindMode && token != "" {
+		value = provider + "|bind|" + token
+	}
+	setOAuthState(c, cache, state, value)
 
 	redirectURL := getCallbackURL(c, provider)
 
@@ -250,7 +257,18 @@ func OAuthCallback(c *gin.Context) {
 	state := c.Query("state")
 	code := c.Query("code")
 	cache := utils.GetCacheFromContext(c)
-	if code == "" || state == "" || getOAuthState(c, cache, state) != provider {
+	raw := getOAuthState(c, cache, state)
+	parts := strings.Split(raw, "|")
+	storedProvider := ""
+	if len(parts) > 0 {
+		storedProvider = parts[0]
+	}
+	bindMode := len(parts) >= 2 && parts[1] == "bind"
+	bindToken := ""
+	if bindMode && len(parts) >= 3 {
+		bindToken = parts[2]
+	}
+	if code == "" || state == "" || storedProvider != provider {
 		c.JSON(http.StatusOK, gin.H{"status": false, "error": "invalid state or code"})
 		return
 	}
@@ -279,6 +297,19 @@ func OAuthCallback(c *gin.Context) {
 		var info githubUser
 		if err := httpGetJSON("https://api.github.com/user", map[string]string{"Authorization": "token " + accessToken, "Accept": "application/json"}, &info); err != nil {
 			c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
+			return
+		}
+		if bindMode {
+			target := ParseToken(c, bindToken)
+			if target == nil {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "bind requires login"})
+				return
+			}
+			if err := bindOAuthToUser(c, target, provider, fmt.Sprintf("%d", info.ID), ""); err != nil {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
+				return
+			}
+			c.Redirect(http.StatusFound, fmt.Sprintf("%s?bind=%s&ok=1", redirectFront, provider))
 			return
 		}
 		u, err := getOrCreateOAuthUser(c, provider, fmt.Sprintf("%d", info.ID), firstNonEmpty(info.Name, info.Login), info.Email, "")
@@ -316,6 +347,19 @@ func OAuthCallback(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
 			return
 		}
+		if bindMode {
+			target := ParseToken(c, bindToken)
+			if target == nil {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "bind requires login"})
+				return
+			}
+			if err := bindOAuthToUser(c, target, provider, info.Sub, ""); err != nil {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
+				return
+			}
+			c.Redirect(http.StatusFound, fmt.Sprintf("%s?bind=%s&ok=1", redirectFront, provider))
+			return
+		}
 		u, err := getOrCreateOAuthUser(c, provider, info.Sub, info.Name, info.Email, "")
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
@@ -342,6 +386,19 @@ func OAuthCallback(c *gin.Context) {
 				err = fmt.Errorf("wechat error: %d %s", tok.ErrCode, tok.ErrMsg)
 			}
 			c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
+			return
+		}
+		if bindMode {
+			target := ParseToken(c, bindToken)
+			if target == nil {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "bind requires login"})
+				return
+			}
+			if err := bindOAuthToUser(c, target, provider, tok.OpenID, tok.UnionID); err != nil {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
+				return
+			}
+			c.Redirect(http.StatusFound, fmt.Sprintf("%s?bind=%s&ok=1", redirectFront, provider))
 			return
 		}
 		u2, err := getOrCreateOAuthUser(c, provider, tok.OpenID, "wechat_user", "", tok.UnionID)
@@ -386,6 +443,19 @@ func OAuthCallback(c *gin.Context) {
 			c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
 			return
 		}
+		if bindMode {
+			target := ParseToken(c, bindToken)
+			if target == nil {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "bind requires login"})
+				return
+			}
+			if err := bindOAuthToUser(c, target, provider, open.OpenID, ""); err != nil {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
+				return
+			}
+			c.Redirect(http.StatusFound, fmt.Sprintf("%s?bind=%s&ok=1", redirectFront, provider))
+			return
+		}
 		u2, err := getOrCreateOAuthUser(c, provider, open.OpenID, "qq_user", "", "")
 		if err != nil {
 			c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
@@ -409,4 +479,61 @@ func firstNonEmpty(a, b string) string {
 		return a
 	}
 	return strings.TrimSpace(b)
+}
+
+func bindOAuthToUser(c *gin.Context, user *User, provider, openID, unionID string) error {
+	db := utils.GetDBFromContext(c)
+	var uid int64
+	err := globals.QueryRowDb(db, "SELECT user_id FROM oauth WHERE provider = ? AND open_id = ?", provider, openID).Scan(&uid)
+	if err == nil && uid > 0 {
+		if uid == user.GetID(db) {
+			return nil
+		}
+		return fmt.Errorf("this account has been bound with another user")
+	}
+	_, err = globals.ExecDb(db, `INSERT INTO oauth (provider, open_id, union_id, user_id) VALUES (?, ?, ?, ?)`, provider, openID, unionID, user.GetID(db))
+	return err
+}
+
+type oauthBinding struct {
+	Provider  string `json:"provider"`
+	OpenID    string `json:"open_id"`
+	UnionID   string `json:"union_id"`
+	CreatedAt string `json:"created_at"`
+}
+
+func OAuthBindingsAPI(c *gin.Context) {
+	user := GetUserByCtx(c)
+	if user == nil {
+		return
+	}
+	db := utils.GetDBFromContext(c)
+	rows, err := globals.QueryDb(db, "SELECT provider, open_id, union_id, created_at FROM oauth WHERE user_id = ?", user.GetID(db))
+	if err != nil {
+		c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
+		return
+	}
+	defer rows.Close()
+	var list []oauthBinding
+	for rows.Next() {
+		var b oauthBinding
+		if err := rows.Scan(&b.Provider, &b.OpenID, &b.UnionID, &b.CreatedAt); err == nil {
+			list = append(list, b)
+		}
+	}
+	c.JSON(http.StatusOK, gin.H{"status": true, "data": list})
+}
+
+func OAuthUnbindAPI(c *gin.Context) {
+	user := GetUserByCtx(c)
+	if user == nil {
+		return
+	}
+	provider := strings.ToLower(c.Param("provider"))
+	db := utils.GetDBFromContext(c)
+	if _, err := globals.ExecDb(db, "DELETE FROM oauth WHERE provider = ? AND user_id = ?", provider, user.GetID(db)); err != nil {
+		c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"status": true})
 }
