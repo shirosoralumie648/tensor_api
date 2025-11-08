@@ -398,3 +398,78 @@ func (f *FeatureConfig) Update(cfg *FeatureConfig) error {
 	*f = *cfg
 	return f.Save()
 }
+
+// ===================== Payment Config =====================
+
+type YiPayConfig struct {
+	Enabled   bool   `json:"enabled" mapstructure:"enabled"`
+	Endpoint  string `json:"endpoint" mapstructure:"endpoint"`
+	MchID     string `json:"mch_id" mapstructure:"mch_id"`
+	Key       string `json:"key" mapstructure:"key"`
+	NotifyURL string `json:"notify_url" mapstructure:"notify_url"`
+	ReturnURL string `json:"return_url" mapstructure:"return_url"`
+}
+
+type WechatConfig struct {
+	Enabled        bool   `json:"enabled" mapstructure:"enabled"`
+	MchID          string `json:"mchid" mapstructure:"mchid"`
+	AppID          string `json:"appid" mapstructure:"appid"`
+	ApiV3Key       string `json:"api_v3_key" mapstructure:"api_v3_key"`
+	SerialNo       string `json:"serial_no" mapstructure:"serial_no"`
+	PrivateKeyPEM  string `json:"private_key_pem" mapstructure:"private_key_pem"`
+	NotifyURL      string `json:"notify_url" mapstructure:"notify_url"`
+	Scene          string `json:"scene" mapstructure:"scene"` // jsapi|native|h5
+}
+
+type AlipayConfig struct {
+	Enabled          bool   `json:"enabled" mapstructure:"enabled"`
+	AppID            string `json:"app_id" mapstructure:"app_id"`
+	PrivateKey       string `json:"private_key" mapstructure:"private_key"`
+	AlipayPublicKey  string `json:"alipay_public_key" mapstructure:"alipay_public_key"`
+	NotifyURL        string `json:"notify_url" mapstructure:"notify_url"`
+	ReturnURL        string `json:"return_url" mapstructure:"return_url"`
+}
+
+type StripeConfig struct {
+	Enabled       bool   `json:"enabled" mapstructure:"enabled"`
+	SecretKey     string `json:"secret_key" mapstructure:"secret_key"`
+	WebhookSecret string `json:"webhook_secret" mapstructure:"webhook_secret"`
+	SuccessURL    string `json:"success_url" mapstructure:"success_url"`
+	CancelURL     string `json:"cancel_url" mapstructure:"cancel_url"`
+	Currency      string `json:"currency" mapstructure:"currency"`
+}
+
+type AggregateConfig struct {
+	Enabled  bool   `json:"enabled" mapstructure:"enabled"`
+	Vendor   string `json:"vendor" mapstructure:"vendor"`
+	Endpoint string `json:"endpoint" mapstructure:"endpoint"`
+	AppID    string `json:"app_id" mapstructure:"app_id"`
+	Key      string `json:"key" mapstructure:"key"`
+	SignType string `json:"sign_type" mapstructure:"sign_type"`
+}
+
+type PaymentConfig struct {
+	YiPay     YiPayConfig     `json:"yipay" mapstructure:"yipay"`
+	Wechat    WechatConfig    `json:"wechat" mapstructure:"wechat"`
+	Alipay    AlipayConfig    `json:"alipay" mapstructure:"alipay"`
+	Stripe    StripeConfig    `json:"stripe" mapstructure:"stripe"`
+	Aggregate AggregateConfig `json:"aggregate" mapstructure:"aggregate"`
+}
+
+func NewPaymentConfig() *PaymentConfig {
+	cfg := &PaymentConfig{}
+	if err := viper.UnmarshalKey("payment", cfg); err != nil {
+		panic(err)
+	}
+	return cfg
+}
+
+func (p *PaymentConfig) Save() error {
+	viper.Set("payment", p)
+	return viper.WriteConfig()
+}
+
+func (p *PaymentConfig) Update(cfg *PaymentConfig) error {
+	*p = *cfg
+	return p.Save()
+}
