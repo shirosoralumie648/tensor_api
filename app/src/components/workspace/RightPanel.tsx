@@ -123,12 +123,12 @@ export default function RightPanel() {
 
   const providerMap = useMemo<ProviderMap>(() => {
     const map: ProviderMap = {} as any;
-    models.forEach((m) => {
+    models.forEach((m: Model) => {
       const p = getProvider(m.id, m.tag);
       (map[p] = map[p] || []).push(m);
     });
     // sort models by name within each provider
-    Object.keys(map).forEach((k) => map[k].sort((a, b) => a.name.localeCompare(b.name)));
+    Object.keys(map).forEach((k) => map[k].sort((a: Model, b: Model) => a.name.localeCompare(b.name)));
     return map;
   }, [models]);
 
@@ -142,9 +142,10 @@ export default function RightPanel() {
   }, [providerMap]);
 
   const currentProvider = useMemo(() => {
-    const current = models.find((m) => m.id === currentModel);
-    return current ? getProvider(current.id, current.tag) : providers[0];
-  }, [models, currentModel, providers]);
+    const current = models.find((m: Model) => m.id === currentModel);
+    if (!current) return providers[0];
+    return getProvider(current.id, current.tag);
+  }, [currentModel, models, providers]);
 
   const [provider, setProvider] = useState<string>(currentProvider || providers[0]);
   // keep provider in sync when model changes externally

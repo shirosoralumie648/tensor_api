@@ -6,7 +6,7 @@ import { selectAdmin, selectAuthenticated } from "@/store/auth";
 import {
   MessageSquare,
   Image as ImageIcon,
-  Waveform,
+  AudioLines,
   Video as VideoIcon,
   BookOpen,
   CircuitBoard,
@@ -49,7 +49,7 @@ export default function SidebarNav() {
       <div className="text-xs text-muted-foreground px-2 mb-1">功能</div>
       <NavItem to="/workspace" icon={MessageSquare} label="对话" />
       <NavItem to="/generate" icon={ImageIcon} label="绘图" />
-      <NavItem to="/workspace/tts" icon={Waveform} label="语音生成" />
+      <NavItem to="/workspace/tts" icon={AudioLines} label="语音生成" />
       <NavItem to="/workspace/video" icon={VideoIcon} label="视频生成" />
       <NavItem to="/workspace/kb" icon={BookOpen} label="知识库" />
       <NavItem to="/workspace/mcp" icon={CircuitBoard} label="MCP" />
