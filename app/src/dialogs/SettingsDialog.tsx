@@ -59,6 +59,7 @@ function SettingsDialog() {
   const presencePenalty = useSelector(settings.presencePenaltySelector);
   const frequencyPenalty = useSelector(settings.frequencyPenaltySelector);
   const repetitionPenalty = useSelector(settings.repetitionPenaltySelector);
+  const showCaps = useSelector(settings.showCapabilitiesSelector);
 
   const [memorySize, setMemorySize] = useState(getMemoryPerformance());
 
@@ -150,6 +151,17 @@ function SettingsDialog() {
                       checked={align}
                       onCheckedChange={(state: boolean) => {
                         dispatch(settings.setAlign(state));
+                      }}
+                    />
+                  </div>
+                  <div className={`item`}>
+                    <div className={`name`}>默认显示能力面板</div>
+                    <div className={`grow`} />
+                    <Checkbox
+                      className={`value`}
+                      checked={showCaps}
+                      onCheckedChange={(state: boolean) => {
+                        dispatch(settings.setShowCapabilities(state));
                       }}
                     />
                   </div>

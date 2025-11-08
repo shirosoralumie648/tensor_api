@@ -57,7 +57,7 @@ function NavBar() {
           className={`logo`}
           src={appLogo}
           alt=""
-          onClick={() => router.navigate(auth ? "/app" : "/")}
+          onClick={() => router.navigate(auth ? "/workspace" : "/")}
         />
         <div className={`grow`} />
         <ProjectLink />
@@ -66,7 +66,7 @@ function NavBar() {
         {auth ? (
           <NavMenu />
         ) : (
-          <Button size={`sm`} onClick={goAuth}>
+          <Button size={`sm`} variant={`brand`} onClick={goAuth}>
             {t("login")}
           </Button>
         )}

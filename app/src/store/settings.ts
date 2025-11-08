@@ -21,6 +21,10 @@ export const initialSettings = {
   presence_penalty: 0,
   frequency_penalty: 0,
   repetition_penalty: 1,
+  show_capabilities: false,
+  enable_tools: false,
+  enable_json: false,
+  parallel_tools: false,
 };
 
 export const settingsSlice = createSlice({
@@ -38,6 +42,10 @@ export const settingsSlice = createSlice({
     presence_penalty: getNumberMemory("presence_penalty", 0), // presence_penalty
     frequency_penalty: getNumberMemory("frequency_penalty", 0), // frequency_penalty
     repetition_penalty: getNumberMemory("repetition_penalty", 1), // repetition_penalty
+    show_capabilities: getBooleanMemory("show_capabilities", false),
+    enable_tools: getBooleanMemory("enable_tools", false),
+    enable_json: getBooleanMemory("enable_json", false),
+    parallel_tools: getBooleanMemory("parallel_tools", false),
   },
   reducers: {
     toggleDialog: (state) => {
@@ -96,6 +104,26 @@ export const settingsSlice = createSlice({
       state.repetition_penalty = action.payload as number;
       setNumberMemory("repetition_penalty", action.payload);
     },
+    setShowCapabilities: (state, action) => {
+      state.show_capabilities = action.payload as boolean;
+      setBooleanMemory("show_capabilities", action.payload);
+    },
+    toggleShowCapabilities: (state) => {
+      state.show_capabilities = !state.show_capabilities;
+      setBooleanMemory("show_capabilities", state.show_capabilities);
+    },
+    setEnableTools: (state, action) => {
+      state.enable_tools = action.payload as boolean;
+      setBooleanMemory("enable_tools", action.payload);
+    },
+    setEnableJson: (state, action) => {
+      state.enable_json = action.payload as boolean;
+      setBooleanMemory("enable_json", action.payload);
+    },
+    setParallelTools: (state, action) => {
+      state.parallel_tools = action.payload as boolean;
+      setBooleanMemory("parallel_tools", action.payload);
+    },
     resetSettings: (state) => {
       state.context = initialSettings.context;
       state.align = initialSettings.align;
@@ -108,6 +136,10 @@ export const settingsSlice = createSlice({
       state.presence_penalty = initialSettings.presence_penalty;
       state.frequency_penalty = initialSettings.frequency_penalty;
       state.repetition_penalty = initialSettings.repetition_penalty;
+      state.show_capabilities = initialSettings.show_capabilities;
+      state.enable_tools = initialSettings.enable_tools;
+      state.enable_json = initialSettings.enable_json;
+      state.parallel_tools = initialSettings.parallel_tools;
 
       setBooleanMemory("context", initialSettings.context);
       setBooleanMemory("align", initialSettings.align);
@@ -120,6 +152,10 @@ export const settingsSlice = createSlice({
       setNumberMemory("presence_penalty", initialSettings.presence_penalty);
       setNumberMemory("frequency_penalty", initialSettings.frequency_penalty);
       setNumberMemory("repetition_penalty", initialSettings.repetition_penalty);
+      setBooleanMemory("show_capabilities", initialSettings.show_capabilities);
+      setBooleanMemory("enable_tools", initialSettings.enable_tools);
+      setBooleanMemory("enable_json", initialSettings.enable_json);
+      setBooleanMemory("parallel_tools", initialSettings.parallel_tools);
     },
   },
 });
@@ -140,6 +176,11 @@ export const {
   setPresencePenalty,
   setFrequencyPenalty,
   setRepetitionPenalty,
+  setShowCapabilities,
+  toggleShowCapabilities,
+  setEnableTools,
+  setEnableJson,
+  setParallelTools,
   resetSettings,
 } = settingsSlice.actions;
 export default settingsSlice.reducer;
@@ -166,3 +207,11 @@ export const frequencyPenaltySelector = (state: RootState): number =>
   state.settings.frequency_penalty;
 export const repetitionPenaltySelector = (state: RootState): number =>
   state.settings.repetition_penalty;
+export const showCapabilitiesSelector = (state: RootState): boolean =>
+  state.settings.show_capabilities;
+export const enableToolsSelector = (state: RootState): boolean =>
+  state.settings.enable_tools;
+export const enableJsonSelector = (state: RootState): boolean =>
+  state.settings.enable_json;
+export const parallelToolsSelector = (state: RootState): boolean =>
+  state.settings.parallel_tools;

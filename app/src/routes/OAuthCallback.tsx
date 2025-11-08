@@ -24,7 +24,7 @@ export default function OAuthCallback() {
     }
 
     validateToken(dispatch as any, jwt, async () => {
-      await navigate("/app");
+      await navigate("/workspace");
     });
   }, []);
 

@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge.tsx";
 import { Rocket, Sparkles, Shield, Zap, Layers, MessageSquare } from "lucide-react";
 import router from "@/router.tsx";
 import { appLogo, appName, docsEndpoint } from "@/conf/env.ts";
+import { useSelector } from "react-redux";
+import { selectAuthenticated, selectInit } from "@/store/auth.ts";
 
 function Feature({ icon, title, desc, className }: { icon: any; title: string; desc: string; className?: string }) {
   return (
@@ -23,6 +25,13 @@ function Feature({ icon, title, desc, className }: { icon: any; title: string; d
 }
 
 export default function Landing() {
+  const init = useSelector(selectInit);
+  const authenticated = useSelector(selectAuthenticated);
+
+  useEffect(() => {
+    if (init && authenticated) router.navigate("/workspace");
+  }, [init, authenticated]);
+
   useEffect(() => {
     const elements = document.querySelectorAll<HTMLElement>(".reveal");
     const io = new IntersectionObserver(
@@ -74,8 +83,7 @@ export default function Landing() {
         <div className={`flex gap-3 mt-6 reveal`}> 
           <Button
             size={`lg`}
-            className={`bg-gradient-to-r from-pink-500 via-fuchsia-500 to-sky-500 text-white shadow-lg hover:opacity-90 hover:shadow-pink-500/30 border-0`}
-            style={{ backgroundSize: "200% 200%", animation: "gradientShift 10s ease infinite" }}
+            variant={`brand`}
             onClick={() => router.navigate("/login")}
           >
             立即开始

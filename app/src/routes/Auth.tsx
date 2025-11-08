@@ -63,7 +63,7 @@ function DeepAuth() {
               title: t("login-success"),
               description: t("login-success-prompt"),
             });
-            await router.navigate("/app");
+            await router.navigate("/workspace");
           });
       })
       .catch((err) => {
@@ -132,7 +132,7 @@ function Login() {
       }
 
       validateToken(globalDispatch, resp.token);
-      await router.navigate("/app");
+      await router.navigate("/workspace");
     } catch (err) {
       console.debug(err);
       toast({
@@ -202,7 +202,7 @@ function Login() {
               }
             />
 
-            <Button onClick={onSubmit} className={`mt-2`} loading={true}>
+            <Button onClick={onSubmit} className={`mt-2`} loading={true} variant={`brand`}>
               {t("login")}
             </Button>
 

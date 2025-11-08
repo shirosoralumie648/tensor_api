@@ -20,6 +20,14 @@ import {
   setPresencePenalty,
   setFrequencyPenalty,
   setRepetitionPenalty,
+  dialogSelector,
+  showCapabilitiesSelector,
+  enableToolsSelector,
+  enableJsonSelector,
+  parallelToolsSelector,
+  setEnableTools,
+  setEnableJson,
+  setParallelTools,
 } from "@/store/settings";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -36,10 +44,12 @@ import {
   openMask,
 } from "@/store/chat";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useMemo, useState, type ReactNode, type ChangeEvent } from "react";
+import { useEffect, useMemo, useState, type ReactNode, type ChangeEvent } from "react";
 import { getMemoryPerformance } from "@/utils/app";
 import { Wand2 } from "lucide-react";
 import type { Model } from "@/api/types.tsx";
+import { Badge } from "@/components/ui/badge";
+import { getProviderCapabilities, getFallbackProviderCapabilities, type ProviderCapabilitiesMap } from "@/api/providers";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -80,6 +90,12 @@ export default function RightPanel() {
   const { selected } = useConversationActions();
 
   const [mem, setMem] = useState<number>(getMemoryPerformance());
+  const [capabilities, setCapabilities] = useState<ProviderCapabilitiesMap>({});
+  useEffect(() => {
+    getProviderCapabilities()
+      .then((data) => setCapabilities(data))
+      .catch(() => setCapabilities(getFallbackProviderCapabilities()));
+  }, []);
   
   // provider-first grouping heuristic
   type ProviderMap = Record<string, ReturnType<typeof models.slice>>;
@@ -150,6 +166,21 @@ export default function RightPanel() {
   const [provider, setProvider] = useState<string>(currentProvider || providers[0]);
   // keep provider in sync when model changes externally
   const providerModels = providerMap[provider] || [];
+  useEffect(() => {
+    setProvider(currentProvider || providers[0]);
+  }, [currentProvider, providers]);
+
+  const featureSet = useMemo(() => {
+    const cap = capabilities[provider]?.features;
+    return cap || getFallbackProviderCapabilities()[provider]?.features;
+  }, [capabilities, provider]);
+
+  const showCapabilities = useSelector(showCapabilitiesSelector);
+  const dialogOpen = useSelector(dialogSelector);
+  const [capsOpen, setCapsOpen] = useState(false);
+  const enableTools = useSelector(enableToolsSelector);
+  const enableJson = useSelector(enableJsonSelector);
+  const parallelTools = useSelector(parallelToolsSelector);
 
   return (
     <div className="rounded-lg border p-3 md:p-4 bg-card">
@@ -212,10 +243,69 @@ export default function RightPanel() {
           <Button variant="outline" size="icon" onClick={() => dispatch(openMask())}>
             <Wand2 className="h-4 w-4" />
           </Button>
+          <Button variant="outline" size="sm" onClick={() => setCapsOpen((v: boolean) => !v)}>
+            Capabilities
+          </Button>
         </div>
       </Section>
 
-      <Separator className="my-3" />
+      {(showCapabilities || capsOpen || dialogOpen) && (
+        <>
+          <Separator className="my-3" />
+          <Section title="Capabilities">
+            <div className="flex flex-wrap gap-2">
+              <Badge variant={featureSet?.text ? "secondary" : "outline"}>Text</Badge>
+              <Badge variant={featureSet?.vision ? "secondary" : "outline"}>Vision</Badge>
+              <Badge variant={featureSet?.tools ? "secondary" : "outline"}>Tools</Badge>
+              <Badge variant={featureSet?.images ? "secondary" : "outline"}>Images</Badge>
+              <Badge variant={featureSet?.audio ? "secondary" : "outline"}>Audio</Badge>
+              <Badge variant={featureSet?.video ? "secondary" : "outline"}>Video</Badge>
+              <Badge variant={featureSet?.embeddings ? "secondary" : "outline"}>Embeddings</Badge>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Context: {featureSet?.context ? `${featureSet.context.toLocaleString()} tokens` : "—"}
+            </div>
+            {(featureSet?.tools || featureSet?.json || featureSet?.parallel_tools) && (
+              <div className="space-y-2 pt-2">
+                {featureSet?.tools && (
+                  <Row
+                    label="Tools"
+                    control={
+                      <Switch
+                        checked={enableTools}
+                        onCheckedChange={(v: boolean) => dispatch(setEnableTools(v))}
+                      />
+                    }
+                  />
+                )}
+                {featureSet?.json && (
+                  <Row
+                    label="JSON mode"
+                    control={
+                      <Switch
+                        checked={enableJson}
+                        onCheckedChange={(v: boolean) => dispatch(setEnableJson(v))}
+                      />
+                    }
+                  />
+                )}
+                {featureSet?.parallel_tools && (
+                  <Row
+                    label="Parallel tools"
+                    control={
+                      <Switch
+                        checked={parallelTools}
+                        onCheckedChange={(v: boolean) => dispatch(setParallelTools(v))}
+                      />
+                    }
+                  />
+                )}
+              </div>
+            )}
+          </Section>
+          <Separator className="my-3" />
+        </>
+      )}
 
       <Section title="Parameters">
         <Row
