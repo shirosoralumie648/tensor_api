@@ -1,6 +1,6 @@
 module chat
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/bincooo/claude-api v1.0.2
@@ -13,7 +13,7 @@ require (
 	github.com/goccy/go-json v0.10.2
 	github.com/golang/protobuf v1.5.3
 	github.com/google/uuid v1.3.1
-	github.com/gorilla/websocket v1.5.0
+	github.com/gorilla/websocket v1.5.3
 	github.com/lukasjarosch/go-docx v0.4.7
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/natefinch/lumberjack v2.0.0+incompatible
