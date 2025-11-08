@@ -13,6 +13,7 @@ var ChargeInstance *ChargeManager
 var SystemInstance *SystemConfig
 var OAuthInstance *OAuthConfig
 var PlanInstance *PlanManager
+var FeatureInstance *FeatureConfig
 
 func InitManager() {
 	ConduitInstance = NewChannelManager()
@@ -20,6 +21,7 @@ func InitManager() {
 	SystemInstance = NewSystemConfig()
 	OAuthInstance = NewOAuthConfig()
 	PlanInstance = NewPlanManager()
+	FeatureInstance = NewFeatureConfig()
 }
 
 func NewChannelManager() *Manager {

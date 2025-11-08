@@ -357,3 +357,44 @@ func (o *OAuthConfig) Update(cfg *OAuthConfig) error {
 	*o = *cfg
 	return o.Save()
 }
+
+// ===================== Feature Config =====================
+
+type ThemeFeature struct {
+	SiteTheme string `json:"site_theme" mapstructure:"site_theme"`
+	Enforce   bool   `json:"enforce" mapstructure:"enforce"`
+}
+
+type MarkdownFeature struct {
+	Highlight bool `json:"highlight" mapstructure:"highlight"`
+	Math      bool `json:"math" mapstructure:"math"`
+	Mermaid   bool `json:"mermaid" mapstructure:"mermaid"`
+	Chart     bool `json:"chart" mapstructure:"chart"`
+}
+
+type FeatureConfig struct {
+	Theme    ThemeFeature    `json:"theme" mapstructure:"theme"`
+	Markdown MarkdownFeature `json:"markdown" mapstructure:"markdown"`
+}
+
+func NewFeatureConfig() *FeatureConfig {
+	cfg := &FeatureConfig{}
+	if err := viper.UnmarshalKey("features", cfg); err != nil {
+		panic(err)
+	}
+	// defaults
+	if cfg.Theme.SiteTheme == "" {
+		cfg.Theme.SiteTheme = "system"
+	}
+	return cfg
+}
+
+func (f *FeatureConfig) Save() error {
+	viper.Set("features", f)
+	return viper.WriteConfig()
+}
+
+func (f *FeatureConfig) Update(cfg *FeatureConfig) error {
+	*f = *cfg
+	return f.Save()
+}

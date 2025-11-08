@@ -16,6 +16,10 @@ func GetInfo(c *gin.Context) {
 	c.JSON(http.StatusOK, SystemInstance.AsInfo())
 }
 
+func GetFeatureInfo(c *gin.Context) {
+	c.JSON(http.StatusOK, FeatureInstance)
+}
+
 func AttachmentService(c *gin.Context) {
 	// /attachments/:hash -> ~/storage/attachments/:hash
 	hash := c.Param("hash")
@@ -198,6 +202,30 @@ func UpdateOAuthConfig(c *gin.Context) {
 	}
 
 	state := OAuthInstance.Update(&cfg)
+	c.JSON(http.StatusOK, gin.H{
+		"status": state == nil,
+		"error":  utils.GetError(state),
+	})
+}
+
+func GetFeatureConfig(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"status": true,
+		"data":   FeatureInstance,
+	})
+}
+
+func UpdateFeatureConfig(c *gin.Context) {
+	var cfg FeatureConfig
+	if err := c.ShouldBindJSON(&cfg); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"status": false,
+			"error":  err.Error(),
+		})
+		return
+	}
+
+	state := FeatureInstance.Update(&cfg)
 	c.JSON(http.StatusOK, gin.H{
 		"status": state == nil,
 		"error":  utils.GetError(state),
