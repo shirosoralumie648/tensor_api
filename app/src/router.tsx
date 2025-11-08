@@ -39,6 +39,7 @@ const Payment = lazyFactor(() => import("@/routes/admin/Payment.tsx"));
 const PaymentOrders = lazyFactor(
   () => import("@/routes/admin/PaymentOrders.tsx"),
 );
+const Workspace = lazyFactor(() => import("@/routes/Workspace.tsx"));
 
 const router = createBrowserRouter(
   [
@@ -66,6 +67,18 @@ const router = createBrowserRouter(
       element: (
         <AuthRequired>
           <Home />
+        </AuthRequired>
+      ),
+      ErrorBoundary: NotFound,
+    },
+    {
+      id: "workspace",
+      path: "/workspace",
+      element: (
+        <AuthRequired>
+          <Suspense>
+            <Workspace />
+          </Suspense>
         </AuthRequired>
       ),
       ErrorBoundary: NotFound,
