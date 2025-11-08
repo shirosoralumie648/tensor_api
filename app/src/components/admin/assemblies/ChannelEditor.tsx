@@ -51,6 +51,7 @@ import Paragraph, {
 import { MultiCombobox } from "@/components/ui/multi-combobox.tsx";
 import { useChannelModels } from "@/admin/hook.tsx";
 import { isEnter } from "@/utils/base.ts";
+import PopupDialog, { popupTypes } from "@/components/PopupDialog.tsx";
 
 type CustomActionProps = {
   onPost: (model: string) => void;
@@ -157,6 +158,7 @@ function ChannelEditor({
   const enabled = useMemo(() => validator(edit), [edit]);
 
   const [loading, setLoading] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   function close(clear?: boolean) {
     if (clear) dispatch({ type: "clear" });
@@ -290,6 +292,9 @@ function ChannelEditor({
                   dispatch({ type: "add-models", value: models });
                 }}
               />
+              <Button variant={`outline`} onClick={() => setImportOpen(true)}>
+                批量导入
+              </Button>
               <Button
                 onClick={() =>
                   dispatch({ type: "add-models", value: info.models })
@@ -298,6 +303,13 @@ function ChannelEditor({
                 {t("admin.channels.fill-template-models", {
                   number: info.models.length,
                 })}
+              </Button>
+              <Button
+                variant={`outline`}
+                onClick={() => dispatch({ type: "add-models", value: unusedModels })}
+                disabled={unusedModels.length === 0}
+              >
+                添加全部可用
               </Button>
               <Button
                 variant={`outline`}
@@ -491,7 +503,7 @@ function ChannelEditor({
             </ParagraphDescription>
           </Paragraph>
         </div>
-        <div className={`mt-4 flex flex-row w-full h-max pr-2 items-center`}>
+        <div className={`mt-4 flex flex-row w-full h-max pr-2 items-center channel-actions`}>
           <div className={`object-id`}>
             <span className={`mr-2`}>ID</span>
             {edit.id === -1 ? (
@@ -513,6 +525,22 @@ function ChannelEditor({
             {t("confirm")}
           </Button>
         </div>
+        <PopupDialog
+          title={"批量导入模型"}
+          name={"模型列表（换行/空格/逗号分隔）"}
+          placeholder={"gpt-4o-mini, text-embedding-3-large\nclaude-3-5-sonnet"}
+          open={importOpen}
+          setOpen={setImportOpen}
+          type={popupTypes.Text}
+          onSubmit={async (value: string) => {
+            const tokens = value
+              .split(/[\s,]+/)
+              .map((s) => s.trim())
+              .filter(Boolean);
+            dispatch({ type: "add-models", value: tokens });
+            return true;
+          }}
+        />
       </div>
     )
   );
