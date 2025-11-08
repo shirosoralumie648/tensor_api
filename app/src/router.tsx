@@ -40,6 +40,12 @@ const PaymentOrders = lazyFactor(
   () => import("@/routes/admin/PaymentOrders.tsx"),
 );
 const Workspace = lazyFactor(() => import("@/routes/Workspace.tsx"));
+const WorkspaceTts = lazyFactor(() => import("@/routes/workspace/Tts.tsx"));
+const WorkspaceVideo = lazyFactor(() => import("@/routes/workspace/Video.tsx"));
+const WorkspaceKb = lazyFactor(() => import("@/routes/workspace/Kb.tsx"));
+const WorkspaceMcp = lazyFactor(() => import("@/routes/workspace/Mcp.tsx"));
+const WorkspaceAgents = lazyFactor(() => import("@/routes/workspace/Agents.tsx"));
+const WorkspacePrompts = lazyFactor(() => import("@/routes/workspace/Prompts.tsx"));
 
 const router = createBrowserRouter(
   [
@@ -78,6 +84,78 @@ const router = createBrowserRouter(
         <AuthRequired>
           <Suspense>
             <Workspace />
+          </Suspense>
+        </AuthRequired>
+      ),
+      ErrorBoundary: NotFound,
+    },
+    {
+      id: "workspace-tts",
+      path: "/workspace/tts",
+      element: (
+        <AuthRequired>
+          <Suspense>
+            <WorkspaceTts />
+          </Suspense>
+        </AuthRequired>
+      ),
+      ErrorBoundary: NotFound,
+    },
+    {
+      id: "workspace-video",
+      path: "/workspace/video",
+      element: (
+        <AuthRequired>
+          <Suspense>
+            <WorkspaceVideo />
+          </Suspense>
+        </AuthRequired>
+      ),
+      ErrorBoundary: NotFound,
+    },
+    {
+      id: "workspace-kb",
+      path: "/workspace/kb",
+      element: (
+        <AuthRequired>
+          <Suspense>
+            <WorkspaceKb />
+          </Suspense>
+        </AuthRequired>
+      ),
+      ErrorBoundary: NotFound,
+    },
+    {
+      id: "workspace-mcp",
+      path: "/workspace/mcp",
+      element: (
+        <AuthRequired>
+          <Suspense>
+            <WorkspaceMcp />
+          </Suspense>
+        </AuthRequired>
+      ),
+      ErrorBoundary: NotFound,
+    },
+    {
+      id: "workspace-agents",
+      path: "/workspace/agents",
+      element: (
+        <AuthRequired>
+          <Suspense>
+            <WorkspaceAgents />
+          </Suspense>
+        </AuthRequired>
+      ),
+      ErrorBoundary: NotFound,
+    },
+    {
+      id: "workspace-prompts",
+      path: "/workspace/prompts",
+      element: (
+        <AuthRequired>
+          <Suspense>
+            <WorkspacePrompts />
           </Suspense>
         </AuthRequired>
       ),

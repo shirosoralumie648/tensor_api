@@ -36,11 +36,12 @@ import {
   openMask,
 } from "@/store/chat";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useMemo, useState, type ReactNode, type ChangeEvent } from "react";
 import { getMemoryPerformance } from "@/utils/app";
 import { Wand2 } from "lucide-react";
+import type { Model } from "@/api/types.tsx";
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="mb-4">
       <div className="text-xs text-muted-foreground mb-2">{title}</div>
@@ -49,7 +50,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-function Row({ label, control }: { label: string; control: React.ReactNode }) {
+function Row({ label, control }: { label: string; control: ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <Label className="text-sm text-muted-foreground">{label}</Label>
@@ -79,13 +80,82 @@ export default function RightPanel() {
   const { selected } = useConversationActions();
 
   const [mem, setMem] = useState<number>(getMemoryPerformance());
+  
+  // provider-first grouping heuristic
+  type ProviderMap = Record<string, ReturnType<typeof models.slice>>;
+  const providerOrder = [
+    "OpenAI",
+    "Anthropic",
+    "Google",
+    "DeepSeek",
+    "Alibaba Qwen",
+    "Zhipu GLM",
+    "Meta Llama",
+    "Mistral",
+    "Moonshot",
+    "MiniMax",
+    "Baidu ERNIE",
+    "Tencent Hunyuan",
+    "ByteDance Doubao",
+    "Ollama",
+    "Other",
+  ];
+
+  const getProvider = (id: string, tags?: string[]): string => {
+    const s = id.toLowerCase();
+    const tag = (tags || []).join(" ").toLowerCase();
+    if (/^(gpt|o[0-9]|omni)/.test(s) || s.includes("openai") || tag.includes("openai")) return "OpenAI";
+    if (s.includes("claude") || tag.includes("anthropic")) return "Anthropic";
+    if (s.includes("gemini") || s.includes("palm") || tag.includes("google")) return "Google";
+    if (s.includes("deepseek")) return "DeepSeek";
+    if (s.startsWith("qwen") || tag.includes("qwen") || tag.includes("alibaba")) return "Alibaba Qwen";
+    if (s.includes("glm") || s.includes("chatglm") || tag.includes("zhipu")) return "Zhipu GLM";
+    if (s.includes("llama")) return "Meta Llama";
+    if (s.includes("mistral")) return "Mistral";
+    if (s.includes("moonshot")) return "Moonshot";
+    if (s.includes("minimax")) return "MiniMax";
+    if (s.includes("ernie") || s.includes("wenxin") || s.includes("qianfan") || tag.includes("baidu")) return "Baidu ERNIE";
+    if (s.includes("hunyuan") || tag.includes("tencent")) return "Tencent Hunyuan";
+    if (s.includes("doubao") || tag.includes("bytedance")) return "ByteDance Doubao";
+    if (s.includes("ollama") || tag.includes("ollama")) return "Ollama";
+    return "Other";
+  };
+
+  const providerMap = useMemo<ProviderMap>(() => {
+    const map: ProviderMap = {} as any;
+    models.forEach((m) => {
+      const p = getProvider(m.id, m.tag);
+      (map[p] = map[p] || []).push(m);
+    });
+    // sort models by name within each provider
+    Object.keys(map).forEach((k) => map[k].sort((a, b) => a.name.localeCompare(b.name)));
+    return map;
+  }, [models]);
+
+  const providers = useMemo<string[]>(() => {
+    const keys = Object.keys(providerMap);
+    return keys.sort((a, b) => {
+      const ia = providerOrder.indexOf(a);
+      const ib = providerOrder.indexOf(b);
+      return (ia === -1 ? 999 : ia) - (ib === -1 ? 999 : ib);
+    });
+  }, [providerMap]);
+
+  const currentProvider = useMemo(() => {
+    const current = models.find((m) => m.id === currentModel);
+    return current ? getProvider(current.id, current.tag) : providers[0];
+  }, [models, currentModel, providers]);
+
+  const [provider, setProvider] = useState<string>(currentProvider || providers[0]);
+  // keep provider in sync when model changes externally
+  const providerModels = providerMap[provider] || [];
 
   return (
     <div className="rounded-lg border p-3 md:p-4 bg-card">
       <Section title="Conversation">
         <Row
           label="Keep context"
-          control={<Switch checked={context} onCheckedChange={(v) => dispatch(setContext(v))} />}
+          control={<Switch checked={context} onCheckedChange={(v: boolean) => dispatch(setContext(v))} />}
         />
         <Row
           label={`History (${history})`}
@@ -96,13 +166,13 @@ export default function RightPanel() {
               max={32}
               step={1}
               value={[history]}
-              onValueChange={(v) => dispatch(setHistory(v[0] ?? 0))}
+              onValueChange={(v: number[]) => dispatch(setHistory(v[0] ?? 0))}
             />
           }
         />
         <Row
           label={"Send key: " + (sender ? "Enter" : "Ctrl + Enter")}
-          control={<Switch checked={sender} onCheckedChange={(v) => dispatch(setSender(v))} />}
+          control={<Switch checked={sender} onCheckedChange={(v: boolean) => dispatch(setSender(v))} />}
         />
         <Row
           label="Web search"
@@ -114,18 +184,30 @@ export default function RightPanel() {
 
       <Section title="Model">
         <div className="flex items-center gap-2">
-          <Select value={currentModel} onValueChange={(v) => selected(v)}>
+          <Select value={provider} onValueChange={(v: string) => setProvider(v)}>
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Provider" />
+            </SelectTrigger>
+            <SelectContent>
+              {providers.map((p: string) => (
+                <SelectItem key={p} value={p}>{p}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select value={currentModel} onValueChange={(v: string) => selected(v)}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select model" />
             </SelectTrigger>
             <SelectContent>
-              {models.map((m) => (
+              {providerModels.map((m: Model) => (
                 <SelectItem key={m.id} value={m.id}>
                   {m.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
           <Button variant="outline" size="icon" onClick={() => dispatch(openMask())}>
             <Wand2 className="h-4 w-4" />
           </Button>
@@ -142,7 +224,7 @@ export default function RightPanel() {
               className="w-28"
               type="number"
               value={maxTokens}
-              onChange={(e) => dispatch(setMaxTokens(Number(e.target.value) || 0))}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => dispatch(setMaxTokens(Number(e.target.value) || 0))}
             />
           }
         />
@@ -155,7 +237,7 @@ export default function RightPanel() {
               max={2}
               step={0.01}
               value={[temperature]}
-              onValueChange={(v) => dispatch(setTemperature(v[0] ?? 0))}
+              onValueChange={(v: number[]) => dispatch(setTemperature(v[0] ?? 0))}
             />
           }
         />
@@ -168,7 +250,7 @@ export default function RightPanel() {
               max={1}
               step={0.01}
               value={[topP]}
-              onValueChange={(v) => dispatch(setTopP(v[0] ?? 0))}
+              onValueChange={(v: number[]) => dispatch(setTopP(v[0] ?? 0))}
             />
           }
         />
@@ -181,7 +263,7 @@ export default function RightPanel() {
               max={50}
               step={1}
               value={[topK]}
-              onValueChange={(v) => dispatch(setTopK(v[0] ?? 0))}
+              onValueChange={(v: number[]) => dispatch(setTopK(v[0] ?? 0))}
             />
           }
         />
@@ -194,7 +276,7 @@ export default function RightPanel() {
               max={2}
               step={0.01}
               value={[presence]}
-              onValueChange={(v) => dispatch(setPresencePenalty(v[0] ?? 0))}
+              onValueChange={(v: number[]) => dispatch(setPresencePenalty(v[0] ?? 0))}
             />
           }
         />
@@ -207,7 +289,7 @@ export default function RightPanel() {
               max={2}
               step={0.01}
               value={[frequency]}
-              onValueChange={(v) => dispatch(setFrequencyPenalty(v[0] ?? 0))}
+              onValueChange={(v: number[]) => dispatch(setFrequencyPenalty(v[0] ?? 0))}
             />
           }
         />
@@ -220,7 +302,7 @@ export default function RightPanel() {
               max={2}
               step={0.01}
               value={[repetition]}
-              onValueChange={(v) => dispatch(setRepetitionPenalty(v[0] ?? 0))}
+              onValueChange={(v: number[]) => dispatch(setRepetitionPenalty(v[0] ?? 0))}
             />
           }
         />
