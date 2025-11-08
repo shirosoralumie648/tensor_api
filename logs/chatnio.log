@@ -86,3 +86,6 @@
 [DEBUG] - [2025-11-08 16:54:34] - [connection] connected to redis (host: redis)
 [INFO] - [2025-11-08 16:54:34] - [service] seo optimization applied to index.cache.html
 [INFO] - [2025-11-08 16:54:34] - [service] pwa manifest applied to site.cache.webmanifest
+[WARNING] - [2025-11-08 17:09:49] - [web] failed to get search result: invalid character 'P' looking for beginning of value (query: 测试)
+[WARNING] - [2025-11-08 17:10:31] - [web] failed to get search result: invalid character 'P' looking for beginning of value (query: 测试)
+[WARNING] - [2025-11-08 17:10:31] - cannot find channel for model gpt-4 (model: gpt-4, client: 172.18.0.1)
