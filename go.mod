@@ -1,6 +1,6 @@
 module chat
 
-go 1.24.0
+go 1.24
 
 require (
 	github.com/bincooo/claude-api v1.0.2
