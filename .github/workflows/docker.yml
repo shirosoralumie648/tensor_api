@@ -1,11 +1,10 @@
 name: Docker
-
 on:
   push:
     branches: [main, master]
     tags:
       - 'v*.*.*'
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read
