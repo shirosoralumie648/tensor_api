@@ -1,6 +1,6 @@
 module chat
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/bincooo/claude-api v1.0.2
@@ -23,7 +23,7 @@ require (
 	github.com/spf13/viper v1.16.0
 	github.com/volcengine/volc-sdk-golang v1.0.127
 	github.com/volcengine/volcengine-go-sdk v1.0.180
-	golang.org/x/net v0.38.0
+	golang.org/x/net v0.46.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 )
 
@@ -69,9 +69,9 @@ require (
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/wangluozhe/fhttp v0.0.0-20230512135433-5c2ebfb4868a // indirect
 	golang.org/x/arch v0.5.0 // indirect
-	golang.org/x/crypto v0.36.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/crypto v0.43.0 // indirect
+	golang.org/x/sys v0.37.0 // indirect
+	golang.org/x/text v0.30.0 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
