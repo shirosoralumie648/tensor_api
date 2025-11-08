@@ -42,7 +42,10 @@ export async function getOAuthBindings(): Promise<OAuthBindingsResponse> {
   return res.data as OAuthBindingsResponse;
 }
 
-export async function unbindOAuth(provider: string): Promise<{ status: boolean; error?: string }>{
-  const res = await axios.post(`/oauth/${provider}/unbind`);
+export async function unbindOAuth(
+  provider: string,
+  code: string,
+): Promise<{ status: boolean; error?: string }>{
+  const res = await axios.post(`/oauth/${provider}/unbind`, { code });
   return res.data as { status: boolean; error?: string };
 }

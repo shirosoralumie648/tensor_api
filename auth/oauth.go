@@ -61,9 +61,14 @@ func OAuthStart(c *gin.Context) {
 	// support binding mode: append "|bind|<token>" into state storage value
 	bindMode := c.Query("bind") == "1" || strings.ToLower(c.Query("mode")) == "bind"
 	token := strings.TrimSpace(c.Query("token"))
+	code := strings.TrimSpace(c.Query("code"))
 	value := provider
-	if bindMode && token != "" {
-		value = provider + "|bind|" + token
+	if bindMode {
+		if token == "" || code == "" {
+			c.JSON(http.StatusOK, gin.H{"status": false, "error": "bind requires token and code"})
+			return
+		}
+		value = provider + "|bind|" + token + "|" + code
 	}
 	setOAuthState(c, cache, state, value)
 
@@ -268,6 +273,10 @@ func OAuthCallback(c *gin.Context) {
 	if bindMode && len(parts) >= 3 {
 		bindToken = parts[2]
 	}
+	bindCode := ""
+	if bindMode && len(parts) >= 4 {
+		bindCode = parts[3]
+	}
 	if code == "" || state == "" || storedProvider != provider {
 		c.JSON(http.StatusOK, gin.H{"status": false, "error": "invalid state or code"})
 		return
@@ -300,9 +309,19 @@ func OAuthCallback(c *gin.Context) {
 			return
 		}
 		if bindMode {
+			db := utils.GetDBFromContext(c)
 			target := ParseToken(c, bindToken)
 			if target == nil {
 				c.JSON(http.StatusOK, gin.H{"status": false, "error": "bind requires login"})
+				return
+			}
+			email := target.GetEmail(db)
+			if strings.TrimSpace(email) == "" {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "email required"})
+				return
+			}
+			if !checkCode(c, cache, email, bindCode) {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "invalid or expired code"})
 				return
 			}
 			if err := bindOAuthToUser(c, target, provider, fmt.Sprintf("%d", info.ID), ""); err != nil {
@@ -348,9 +367,19 @@ func OAuthCallback(c *gin.Context) {
 			return
 		}
 		if bindMode {
+			db := utils.GetDBFromContext(c)
 			target := ParseToken(c, bindToken)
 			if target == nil {
 				c.JSON(http.StatusOK, gin.H{"status": false, "error": "bind requires login"})
+				return
+			}
+			email := target.GetEmail(db)
+			if strings.TrimSpace(email) == "" {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "email required"})
+				return
+			}
+			if !checkCode(c, cache, email, bindCode) {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "invalid or expired code"})
 				return
 			}
 			if err := bindOAuthToUser(c, target, provider, info.Sub, ""); err != nil {
@@ -389,9 +418,19 @@ func OAuthCallback(c *gin.Context) {
 			return
 		}
 		if bindMode {
+			db := utils.GetDBFromContext(c)
 			target := ParseToken(c, bindToken)
 			if target == nil {
 				c.JSON(http.StatusOK, gin.H{"status": false, "error": "bind requires login"})
+				return
+			}
+			email := target.GetEmail(db)
+			if strings.TrimSpace(email) == "" {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "email required"})
+				return
+			}
+			if !checkCode(c, cache, email, bindCode) {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "invalid or expired code"})
 				return
 			}
 			if err := bindOAuthToUser(c, target, provider, tok.OpenID, tok.UnionID); err != nil {
@@ -444,9 +483,19 @@ func OAuthCallback(c *gin.Context) {
 			return
 		}
 		if bindMode {
+			db := utils.GetDBFromContext(c)
 			target := ParseToken(c, bindToken)
 			if target == nil {
 				c.JSON(http.StatusOK, gin.H{"status": false, "error": "bind requires login"})
+				return
+			}
+			email := target.GetEmail(db)
+			if strings.TrimSpace(email) == "" {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "email required"})
+				return
+			}
+			if !checkCode(c, cache, email, bindCode) {
+				c.JSON(http.StatusOK, gin.H{"status": false, "error": "invalid or expired code"})
 				return
 			}
 			if err := bindOAuthToUser(c, target, provider, open.OpenID, ""); err != nil {
@@ -531,6 +580,17 @@ func OAuthUnbindAPI(c *gin.Context) {
 	}
 	provider := strings.ToLower(c.Param("provider"))
 	db := utils.GetDBFromContext(c)
+	var body struct{ Code string `json:"code"` }
+	_ = c.ShouldBindJSON(&body)
+	email := user.GetEmail(db)
+	if strings.TrimSpace(email) == "" {
+		c.JSON(http.StatusOK, gin.H{"status": false, "error": "email required"})
+		return
+	}
+	if !checkCode(c, utils.GetCacheFromContext(c), email, strings.TrimSpace(body.Code)) {
+		c.JSON(http.StatusOK, gin.H{"status": false, "error": "invalid or expired code"})
+		return
+	}
 	if _, err := globals.ExecDb(db, "DELETE FROM oauth WHERE provider = ? AND user_id = ?", provider, user.GetID(db)); err != nil {
 		c.JSON(http.StatusOK, gin.H{"status": false, "error": err.Error()})
 		return
