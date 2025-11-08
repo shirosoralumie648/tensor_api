@@ -12,6 +12,7 @@ import {
   Radio,
   Settings,
   Users,
+  SlidersHorizontal,
 } from "lucide-react";
 import router from "@/router.tsx";
 import { useLocation } from "react-router-dom";
@@ -84,6 +85,11 @@ function MenuBar() {
         title={t("admin.settings")}
         icon={<Settings />}
         path={"/system"}
+      />
+      <MenuItem
+        title={t("admin.feature")}
+        icon={<SlidersHorizontal />}
+        path={"/feature"}
       />
       <MenuItem
         title={t("admin.logger.title")}

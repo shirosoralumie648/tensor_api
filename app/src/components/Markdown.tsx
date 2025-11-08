@@ -3,6 +3,7 @@ import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkBreaks from "remark-breaks";
 import rehypeKatex from "rehype-katex";
+import "katex/dist/katex.min.css";
 import rehypeRaw from "rehype-raw";
 import "@/assets/markdown/all.less";
 import { useEffect, useMemo } from "react";
@@ -10,6 +11,7 @@ import { cn } from "@/components/ui/lib/utils.ts";
 import Label from "@/components/markdown/Label.tsx";
 import Link from "@/components/markdown/Link.tsx";
 import Code, { CodeProps } from "@/components/markdown/Code.tsx";
+import { getBooleanMemory } from "@/utils/memory.ts";
 
 type MarkdownProps = {
   children: string;
@@ -35,7 +37,8 @@ function MarkdownContent({
   }, [children]);
 
   const rehypePlugins = useMemo(() => {
-    const plugins = [rehypeKatex as any];
+    const acceptMath = getBooleanMemory("feature_md_math", true);
+    const plugins = acceptMath ? ([rehypeKatex] as any[]) : ([] as any[]);
     return acceptHtml ? [...plugins, rehypeRaw] : plugins;
   }, [acceptHtml]);
 
@@ -51,7 +54,11 @@ function MarkdownContent({
 
   return (
     <ReactMarkdown
-      remarkPlugins={[remarkMath, remarkGfm, remarkBreaks]}
+      remarkPlugins={
+        getBooleanMemory("feature_md_math", true)
+          ? [remarkMath, remarkGfm, remarkBreaks]
+          : [remarkGfm, remarkBreaks]
+      }
       rehypePlugins={rehypePlugins}
       className={cn("markdown-body", className)}
       children={children}
@@ -70,15 +77,13 @@ function Markdown({
 }: MarkdownProps) {
   const processedContent = useMemo(() => {
     let content = children;
-    
-    // Inline math: replace \(...\) with $ ... $
-    content = content.replace(/\\\((.*?)\\\)/g, (_, equation) => `$ ${equation.trim()} $`);
-    
-    // Block math: replace \[...\] with $$...$$ on separate lines
-    content = content.replace(
-      /\s*\\\[\s*([\s\S]*?)\s*\\\]\s*/g,
-      (_, equation) => `\n$$\n${equation.trim()}\n$$\n`
-    );
+    if (getBooleanMemory("feature_md_math", true)) {
+      content = content.replace(/\\\((.*?)\\\)/g, (_, equation) => `$ ${equation.trim()} $`);
+      content = content.replace(
+        /\s*\\\[\s*([\s\S]*?)\s*\\\]\s*/g,
+        (_, equation) => `\n$$\n${equation.trim()}\n$$\n`
+      );
+    }
     
     return content;
   }, [children]);
