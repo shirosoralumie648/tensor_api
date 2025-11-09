@@ -30,6 +30,10 @@ type Conversation struct {
 	PresencePenalty   *float32 `json:"presence_penalty,omitempty"`
 	FrequencyPenalty  *float32 `json:"frequency_penalty,omitempty"`
 	RepetitionPenalty *float32 `json:"repetition_penalty,omitempty"`
+	// advanced toggles
+	EnableTools   bool `json:"enable_tools"`
+	JsonMode      bool `json:"json_mode"`
+	ParallelTools bool `json:"parallel_tools"`
 }
 
 type FormMessage struct {
@@ -48,6 +52,10 @@ type FormMessage struct {
 	PresencePenalty   *float32 `json:"presence_penalty,omitempty"`
 	FrequencyPenalty  *float32 `json:"frequency_penalty,omitempty"`
 	RepetitionPenalty *float32 `json:"repetition_penalty,omitempty"`
+	// advanced toggles from frontend
+	Tools         bool `json:"tools"`
+	Json          bool `json:"json"`
+	ParallelTools bool `json:"parallel_tools"`
 }
 
 func NewAnonymousConversation() *Conversation {
@@ -106,6 +114,30 @@ func (c *Conversation) GetModel() string {
 
 func (c *Conversation) IsEnableWeb() bool {
 	return c.EnableWeb
+}
+
+func (c *Conversation) IsEnableTools() bool {
+	return c.EnableTools
+}
+
+func (c *Conversation) SetEnableTools(enable bool) {
+	c.EnableTools = enable
+}
+
+func (c *Conversation) IsJsonMode() bool {
+	return c.JsonMode
+}
+
+func (c *Conversation) SetJsonMode(enable bool) {
+	c.JsonMode = enable
+}
+
+func (c *Conversation) IsParallelTools() bool {
+	return c.ParallelTools
+}
+
+func (c *Conversation) SetParallelTools(enable bool) {
+	c.ParallelTools = enable
 }
 
 func (c *Conversation) GetContextLength() int {
@@ -327,6 +359,9 @@ func (c *Conversation) ApplyParam(form *FormMessage) {
 	c.SetPresencePenalty(form.PresencePenalty)
 	c.SetFrequencyPenalty(form.FrequencyPenalty)
 	c.SetRepetitionPenalty(form.RepetitionPenalty)
+	c.SetEnableTools(form.Tools)
+	c.SetJsonMode(form.Json)
+	c.SetParallelTools(form.ParallelTools)
 }
 
 func (c *Conversation) AddMessageFromByte(data []byte) (string, error) {

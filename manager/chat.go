@@ -114,6 +114,9 @@ func createChatTask(
 				PresencePenalty:   instance.GetPresencePenalty(),
 				FrequencyPenalty:  instance.GetFrequencyPenalty(),
 				RepetitionPenalty: instance.GetRepetitionPenalty(),
+				EnableTools:       instance.IsEnableTools(),
+				JsonMode:          instance.IsJsonMode(),
+				ParallelTools:     instance.IsParallelTools(),
 			}, buffer),
 
 			// the function to handle the chunk data

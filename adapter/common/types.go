@@ -29,6 +29,11 @@ type ChatProps struct {
 	Tools             *globals.FunctionTools `json:"tools,omitempty"`
 	ToolChoice        *interface{}           `json:"tool_choice,omitempty"`
 	Buffer            *utils.Buffer          `json:"-"`
+
+	// advanced toggles from websocket conversation
+	EnableTools   bool `json:"enable_tools,omitempty"`
+	JsonMode      bool `json:"json_mode,omitempty"`
+	ParallelTools bool `json:"parallel_tools,omitempty"`
 }
 
 func (c *ChatProps) SetupBuffer(buf *utils.Buffer) {

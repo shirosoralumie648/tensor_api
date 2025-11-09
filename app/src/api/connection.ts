@@ -31,6 +31,10 @@ export type ChatProps = {
   presence_penalty?: number;
   frequency_penalty?: number;
   repetition_penalty?: number;
+  // provider advanced toggles
+  tools?: boolean;
+  json?: boolean;
+  parallel_tools?: boolean;
 };
 
 type StreamCallback = (id: number, message: StreamMessage) => void;

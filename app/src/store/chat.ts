@@ -43,6 +43,9 @@ import {
   temperatureSelector,
   topKSelector,
   topPSelector,
+  enableToolsSelector,
+  enableJsonSelector,
+  parallelToolsSelector,
 } from "@/store/settings.ts";
 
 export type ConversationSerialized = {
@@ -517,6 +520,9 @@ export function useMessageActions() {
   const presence_penalty = useSelector(presencePenaltySelector);
   const frequency_penalty = useSelector(frequencyPenaltySelector);
   const repetition_penalty = useSelector(repetitionPenaltySelector);
+  const tools = useSelector(enableToolsSelector);
+  const json = useSelector(enableJsonSelector);
+  const parallel_tools = useSelector(parallelToolsSelector);
 
   return {
     send: async (message: string, using_model?: string) => {
@@ -548,6 +554,9 @@ export function useMessageActions() {
         presence_penalty,
         frequency_penalty,
         repetition_penalty,
+        tools,
+        json,
+        parallel_tools,
       });
       if (!state) return false;
 
@@ -579,6 +588,9 @@ export function useMessageActions() {
         presence_penalty,
         frequency_penalty,
         repetition_penalty,
+        tools,
+        json,
+        parallel_tools,
         message: "",
       });
 
