@@ -1,6 +1,6 @@
 module chat
 
-go 1.24
+go 1.24.0
 
 require (
 	github.com/bincooo/claude-api v1.0.2
@@ -17,7 +17,7 @@ require (
 	github.com/lukasjarosch/go-docx v0.4.7
 	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/natefinch/lumberjack v2.0.0+incompatible
-	github.com/pkoukk/tiktoken-go v0.1.6
+	github.com/pkoukk/tiktoken-go v0.1.8
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/viper v1.16.0
