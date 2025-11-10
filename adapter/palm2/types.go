@@ -35,6 +35,7 @@ type GeminiConfig struct {
 	MaxOutputTokens *int     `json:"maxOutputTokens,omitempty"`
 	TopP            *float32 `json:"topP,omitempty"`
 	TopK            *int     `json:"topK,omitempty"`
+	ResponseMimeType *string `json:"responseMimeType,omitempty"`
 }
 
 type GeminiContent struct {
