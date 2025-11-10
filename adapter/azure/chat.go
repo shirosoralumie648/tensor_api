@@ -43,7 +43,7 @@ func (c *ChatInstance) GetChatBody(props *adaptercommon.ChatProps, stream bool) 
 		}
 	}
 
-	return ChatRequest{
+	req := ChatRequest{
 		Messages:         formatMessages(props),
 		MaxToken:         props.MaxTokens,
 		Stream:           stream,
@@ -54,6 +54,20 @@ func (c *ChatInstance) GetChatBody(props *adaptercommon.ChatProps, stream bool) 
 		Tools:            props.Tools,
 		ToolChoice:       props.ToolChoice,
 	}
+
+	// advanced toggles
+	if props.JsonMode {
+		req.ResponseFormat = &ResponseFormat{Type: "json_object"}
+	}
+	if !props.EnableTools {
+		req.Tools = nil
+		req.ToolChoice = nil
+	} else {
+		if props.Tools != nil && props.ParallelTools {
+			req.ParallelToolCalls = utils.ToPtr(true)
+		}
+	}
+	return req
 }
 
 // CreateChatRequest is the native http request body for openai

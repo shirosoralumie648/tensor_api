@@ -12,26 +12,37 @@ COPY . .
 ARG TARGETARCH
 ARG TARGETOS
 ENV GOOS=$TARGETOS GOARCH=$TARGETARCH GO111MODULE=on CGO_ENABLED=1
+# Go mirrors
+ENV GOPROXY=https://goproxy.cn,direct
+ENV GOSUMDB=off
 
-# Install build dependencies
-RUN apk update && \
-    apk add --no-cache \
-    gcc \
-    musl-dev \
-    g++ \
-    make \
-    linux-headers \
-    libwebp-dev
+# Install build dependencies (with mirror switch and retry)
+RUN set -eux; \
+    sed -i 's#https://dl-cdn.alpinelinux.org#https://mirrors.tencent.com#g' /etc/apk/repositories || true; \
+    for i in 1 2 3; do apk update && break || (sleep 2); done; \
+    for i in 1 2 3; do apk add --no-cache \
+        gcc \
+        musl-dev \
+        g++ \
+        make \
+        linux-headers \
+        libwebp-dev \
+      && break || (sleep 2); done
 
 # Build backend (disable static linking to avoid CGO static issues)
-RUN go mod tidy && go build -o chat -a .
+RUN go env -w GOPROXY=$GOPROXY GOSUMDB=$GOSUMDB && \
+    go mod download && \
+    go mod tidy && \
+    go build -o chat -a .
 
 FROM node:18 AS frontend
 
 WORKDIR /app
 COPY ./app .
 
-RUN npm install -g pnpm && \
+RUN npm config set registry https://registry.npmmirror.com && \
+    npm install -g pnpm && \
+    pnpm config set registry https://registry.npmmirror.com && \
     pnpm install && \
     pnpm run build && \
     rm -rf node_modules src
@@ -39,9 +50,12 @@ RUN npm install -g pnpm && \
 
 FROM alpine
 
-# Install dependencies
-RUN apk upgrade --no-cache && \
-    apk add --no-cache wget ca-certificates tzdata libwebp && \
+# Install dependencies (with mirror switch and retry)
+RUN set -eux; \
+    sed -i 's#https://dl-cdn.alpinelinux.org#https://mirrors.tencent.com#g' /etc/apk/repositories || true; \
+    for i in 1 2 3; do apk update && break || (sleep 2); done; \
+    for i in 1 2 3; do apk upgrade --no-cache && break || (sleep 2); done; \
+    for i in 1 2 3; do apk add --no-cache wget ca-certificates tzdata libwebp && break || (sleep 2); done; \
     update-ca-certificates 2>/dev/null || true
 
 # Set timezone

@@ -38,6 +38,12 @@ type ChatRequest struct {
 	TopP                *float32               `json:"top_p,omitempty"`
 	Tools               *globals.FunctionTools `json:"tools,omitempty"`
 	ToolChoice          *interface{}           `json:"tool_choice,omitempty"` // string or object
+	ResponseFormat      *ResponseFormat        `json:"response_format,omitempty"`
+	ParallelToolCalls   *bool                  `json:"parallel_tool_calls,omitempty"`
+}
+
+type ResponseFormat struct {
+	Type string `json:"type"`
 }
 
 // CompletionRequest is the request body for openai completion

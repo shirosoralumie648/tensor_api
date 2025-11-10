@@ -58,7 +58,7 @@ func (c *ChatInstance) GetPalm2ChatBody(props *adaptercommon.ChatProps) *PalmCha
 }
 
 func (c *ChatInstance) GetGeminiChatBody(props *adaptercommon.ChatProps) *GeminiChatBody {
-	return &GeminiChatBody{
+	body := &GeminiChatBody{
 		Contents: c.GetGeminiContents(props.Model, props.Message),
 		GenerationConfig: GeminiConfig{
 			Temperature:     props.Temperature,
@@ -67,6 +67,13 @@ func (c *ChatInstance) GetGeminiChatBody(props *adaptercommon.ChatProps) *Gemini
 			TopK:            props.TopK,
 		},
 	}
+
+	// JSON mode: prefer JSON response mime when requested
+	if props.JsonMode {
+		mt := "application/json"
+		body.GenerationConfig.ResponseMimeType = &mt
+	}
+	return body
 }
 
 func (c *ChatInstance) GetPalm2ChatResponse(data interface{}) (string, error) {

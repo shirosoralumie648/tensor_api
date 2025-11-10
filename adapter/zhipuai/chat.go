@@ -65,7 +65,7 @@ func (c *ChatInstance) GetChatBody(props *adaptercommon.ChatProps, stream bool) 
 		props.TopP = utils.ToPtr[float32](0.01)
 	}
 
-	return ChatRequest{
+	req := ChatRequest{
 		Model:            props.Model,
 		Messages:         messages,
 		MaxToken:         props.MaxTokens,
@@ -77,6 +77,13 @@ func (c *ChatInstance) GetChatBody(props *adaptercommon.ChatProps, stream bool) 
 		Tools:            props.Tools,
 		ToolChoice:       props.ToolChoice,
 	}
+
+	if !props.EnableTools {
+		req.Tools = nil
+		req.ToolChoice = nil
+	}
+
+	return req
 }
 
 // CreateChatRequest is the native http request body for chatglm

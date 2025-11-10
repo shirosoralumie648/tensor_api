@@ -74,6 +74,24 @@ func (c *ChatInstance) GetChatBody(props *adaptercommon.ChatProps, stream bool) 
 	} else {
 		request.MaxToken = props.MaxTokens
 	}
+
+	// advanced toggles
+	// JSON mode supported on chat.completions style models
+	if props.JsonMode && !isNewModel {
+		request.ResponseFormat = &ResponseFormat{Type: "json_object"}
+	}
+
+	// Tools toggle: when disabled, strip tool fields
+	if !props.EnableTools {
+		request.Tools = nil
+		request.ToolChoice = nil
+	} else {
+		// Parallel tool calls only for chat.completions style and when tools exist
+		if props.Tools != nil && props.ParallelTools && !isNewModel {
+			request.ParallelToolCalls = utils.ToPtr(true)
+		}
+	}
+
 	return request
 }
 
