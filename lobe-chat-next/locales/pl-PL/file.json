@@ -1,0 +1,183 @@
+{
+  "addFolder": "Utwórz folder",
+  "addKnowledge": "Dodaj wiedzę",
+  "addPage": "Utwórz dokument",
+  "desc": "Zarządzaj swoją wiedzą z pracy, nauki i życia.",
+  "detail": {
+    "basic": {
+      "createdAt": "Data utworzenia",
+      "filename": "Nazwa pliku",
+      "size": "Rozmiar pliku",
+      "title": "Informacje podstawowe",
+      "type": "Format",
+      "updatedAt": "Data aktualizacji"
+    },
+    "data": {
+      "chunkCount": "Liczba fragmentów",
+      "embedding": {
+        "default": "Nie zindeksowano",
+        "error": "Błąd",
+        "pending": "Oczekiwanie na uruchomienie",
+        "processing": "W trakcie przetwarzania",
+        "success": "Zakończono"
+      },
+      "embeddingStatus": "Indeksowanie"
+    }
+  },
+  "documentEditor": {
+    "addIcon": "Dodaj ikonę",
+    "autoSaveMessage": "Dokument jest zapisywany automatycznie, nie ma potrzeby zapisywania ręcznego",
+    "chooseIcon": "Wybierz ikonę",
+    "deleteConfirm": {
+      "content": "Zamierzasz usunąć ten dokument. Po usunięciu nie będzie można go odzyskać. Proszę postępować ostrożnie.",
+      "title": "Usuń dokument"
+    },
+    "deleteError": "Nie udało się usunąć dokumentu",
+    "deleteSuccess": "Dokument został pomyślnie usunięty",
+    "editedAt": "Ostatnia edycja: {{time}}",
+    "editedBy": "Ostatnio edytował: {{name}}",
+    "editorPlaceholder": "Wpisz treść dokumentu, naciśnij / aby otworzyć menu poleceń",
+    "empty": {
+      "createNewDocument": "Utwórz nowy dokument",
+      "title": "Wybierz dokument, aby rozpocząć",
+      "uploadMarkdown": "Prześlij plik Markdown"
+    },
+    "linkCopied": "Link został skopiowany",
+    "menu": {
+      "copyLink": "Kopiuj link",
+      "exportDocument": "Eksportuj dokument",
+      "importDocument": "Importuj dokument",
+      "pin": "Przypnij dokument"
+    },
+    "saving": "Zapisywanie...",
+    "titlePlaceholder": "Bez tytułu",
+    "wordCount": "{{wordCount}} słów"
+  },
+  "documentList": {
+    "copyContent": "Kopiuj całą treść",
+    "documentCount": "Łącznie {{count}} dokumentów",
+    "duplicate": "Utwórz kopię",
+    "empty": "Brak dokumentów. Kliknij przycisk powyżej, aby utworzyć pierwszy dokument",
+    "noResults": "Nie znaleziono pasujących dokumentów",
+    "selectNote": "Wybierz dokument, aby rozpocząć edycję",
+    "untitled": "Bez tytułu"
+  },
+  "empty": "Brak przesłanych plików/folderów",
+  "header": {
+    "actions": {
+      "newFolder": "Nowy folder",
+      "newPage": "Nowy dokument",
+      "uploadFile": "Prześlij plik",
+      "uploadFolder": "Prześlij folder"
+    },
+    "newDocumentButton": "Nowy dokument",
+    "newNoteDialog": {
+      "cancel": "Anuluj",
+      "editTitle": "Edytuj dokument",
+      "emptyContent": "Treść dokumentu nie może być pusta",
+      "loadError": "Nie udało się załadować dokumentu, spróbuj ponownie",
+      "loading": "Ładowanie...",
+      "save": "Zapisz",
+      "saveError": "Nie udało się zapisać dokumentu, spróbuj ponownie",
+      "saveSuccess": "Dokument został zapisany pomyślnie",
+      "title": "Nowy dokument",
+      "updateSuccess": "Dokument został zaktualizowany pomyślnie"
+    },
+    "uploadButton": "Prześlij"
+  },
+  "home": {
+    "getStarted": "Rozpocznij",
+    "greeting": "Zaczynamy",
+    "quickActions": "Szybkie akcje",
+    "recentDocuments": "Ostatnie dokumenty",
+    "recentFiles": "Ostatnie pliki",
+    "subtitle": "Witamy w bazie wiedzy. Zacznij zarządzać swoimi dokumentami już teraz",
+    "uploadEntries": {
+      "files": {
+        "title": "Prześlij pliki"
+      },
+      "folder": {
+        "title": "Prześlij folder"
+      },
+      "knowledgeBase": {
+        "title": "Nowa baza wiedzy"
+      },
+      "newDocument": {
+        "title": "Nowy dokument"
+      }
+    }
+  },
+  "knowledgeBase": {
+    "list": {
+      "confirmRemoveKnowledgeBase": "Zaraz usuniesz tę bazę wiedzy, pliki w niej zawarte nie zostaną usunięte, a zostaną przeniesione do folderu wszystkich plików. Po usunięciu bazy wiedzy nie będzie można jej przywrócić, proszę działać ostrożnie.",
+      "empty": "Kliknij <1>+</1>, aby rozpocząć tworzenie bazy wiedzy"
+    },
+    "new": "Nowa baza wiedzy",
+    "title": "Baza wiedzy"
+  },
+  "menu": {
+    "allDocuments": "Wszystkie dokumenty",
+    "allFiles": "Wszystkie pliki"
+  },
+  "networkError": "Nie udało się uzyskać dostępu do bazy wiedzy, proszę sprawdzić połączenie sieciowe i spróbować ponownie",
+  "notSupportGuide": {
+    "desc": "Obecna instancja wdrożeniowa jest w trybie bazy danych klienta, co uniemożliwia korzystanie z funkcji zarządzania plikami. Proszę przełączyć się na <1>tryb wdrożenia bazy danych serwera</1> lub bezpośrednio korzystać z <3>LobeChat Cloud</3>",
+    "features": {
+      "allKind": {
+        "desc": "Obsługuje popularne typy plików, w tym formaty dokumentów takie jak Word, PPT, Excel, PDF, TXT oraz popularne pliki kodu, takie jak JS, Python",
+        "title": "Analiza różnych typów plików"
+      },
+      "embeddings": {
+        "desc": "Wykorzystuje wysokowydajne modele wektorowe do indeksowania fragmentów tekstu, umożliwiając semantyczne przeszukiwanie treści plików",
+        "title": "Semantyzacja wektorów"
+      },
+      "repos": {
+        "desc": "Obsługuje tworzenie bazy wiedzy i pozwala na dodawanie różnych typów plików, budując swoją własną wiedzę w danej dziedzinie",
+        "title": "Baza wiedzy"
+      }
+    },
+    "title": "Obecny tryb wdrożenia nie obsługuje zarządzania plikami"
+  },
+  "preview": {
+    "downloadFile": "Pobierz plik",
+    "unsupportedFileAndContact": "Ten format pliku nie jest obecnie obsługiwany w podglądzie online. Jeśli chcesz uzyskać podgląd, zachęcamy do <1>skontaktowania się z nami</1>."
+  },
+  "searchDocumentPlaceholder": "Szukaj dokumentu",
+  "searchFilePlaceholder": "Szukaj pliku",
+  "tab": {
+    "all": "Wszystko",
+    "audios": "Audio",
+    "documents": "Dokumenty",
+    "home": "Strona główna",
+    "images": "Obrazy",
+    "moreTypes": "Więcej typów",
+    "pages": "Dokumenty",
+    "videos": "Wideo",
+    "websites": "Strony internetowe"
+  },
+  "title": "Baza wiedzy",
+  "toggleLeftPanel": {
+    "title": "Pokaż/ukryj panel po lewej stronie"
+  },
+  "uploadDock": {
+    "body": {
+      "collapse": "Zwiń",
+      "item": {
+        "done": "Przesłano",
+        "error": "Błąd przesyłania, spróbuj ponownie",
+        "pending": "Przygotowanie do przesłania...",
+        "processing": "Przetwarzanie pliku...",
+        "restTime": "Pozostały czas {{time}}"
+      }
+    },
+    "fileQueueInfo": "Trwa przesyłanie {{count}} pierwszych plików, pozostałe {{remaining}} pliki zostaną dodane do kolejki",
+    "totalCount": "Łącznie {{count}} pozycji",
+    "uploadStatus": {
+      "error": "Błąd przesyłania",
+      "pending": "Oczekiwanie na przesłanie",
+      "processing": "Przesyłanie",
+      "success": "Przesyłanie zakończone",
+      "uploading": "Przesyłanie w toku"
+    }
+  }
+}

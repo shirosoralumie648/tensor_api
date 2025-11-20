@@ -1,0 +1,73 @@
+import { lambdaClient } from '@/libs/trpc/client';
+import {
+  CheckFileHashResult,
+  FileItem,
+  QueryFileListParams,
+  QueryFileListSchemaType,
+  UploadFileParams,
+} from '@/types/files';
+
+interface CreateFileParams extends Omit<UploadFileParams, 'url'> {
+  knowledgeBaseId?: string;
+  url: string;
+}
+
+export class FileService {
+  createFile = async (
+    params: UploadFileParams,
+    knowledgeBaseId?: string,
+  ): Promise<{ id: string; url: string }> => {
+    return lambdaClient.file.createFile.mutate({ ...params, knowledgeBaseId } as CreateFileParams);
+  };
+
+  getFile = async (id: string): Promise<FileItem> => {
+    const item = await lambdaClient.file.findById.query({ id });
+
+    if (!item) {
+      throw new Error('file not found');
+    }
+
+    return {
+      createdAt: item.createdAt,
+      id: item.id,
+      name: item.name,
+      size: item.size,
+      source: item.source,
+      type: item.fileType,
+      updatedAt: item.updatedAt,
+      url: item.url,
+    };
+  };
+
+  removeFile = async (id: string): Promise<void> => {
+    await lambdaClient.file.removeFile.mutate({ id });
+  };
+
+  removeFiles = async (ids: string[]): Promise<void> => {
+    await lambdaClient.file.removeFiles.mutate({ ids });
+  };
+
+  removeAllFiles = async () => {
+    await lambdaClient.file.removeAllFiles.mutate();
+  };
+
+  // V2.0 Migrate from getFiles to getKnowledgeItems
+  getKnowledgeItems = async (params: QueryFileListParams) => {
+    return lambdaClient.file.getKnowledgeItems.query(params as QueryFileListSchemaType);
+  };
+
+  // V2.0 Migrate from getFileItem to getKnowledgeItem
+  getKnowledgeItem = async (id: string) => {
+    return lambdaClient.file.getFileItemById.query({ id });
+  };
+
+  checkFileHash = async (hash: string): Promise<CheckFileHashResult> => {
+    return lambdaClient.file.checkFileHash.mutate({ hash });
+  };
+
+  removeFileAsyncTask = async (id: string, type: 'embedding' | 'chunk') => {
+    return lambdaClient.file.removeFileAsyncTask.mutate({ id, type });
+  };
+}
+
+export const fileService = new FileService();

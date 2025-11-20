@@ -1,0 +1,4 @@
+{
+  "buildCommand": "bun run build",
+  "installCommand": "npx bun@1.2.23 install"
+}

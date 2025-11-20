@@ -1,0 +1,36 @@
+---
+alwaysApply: true
+---
+
+## Project Description
+
+You are developing an open-source, modern-design AI chat framework: lobehub(previous lobe-chat).
+
+Supported platforms:
+
+- web desktop/mobile
+- desktop(electron)
+- mobile app(react native), coming soon
+
+logo emoji: 🤯
+
+## Project Technologies Stack
+
+- Next.js 15
+- react 19
+- TypeScript
+- `@lobehub/ui`, antd for component framework
+- antd-style for css-in-js framework
+- lucide-react, `@ant-design/icons` for icons
+- react-layout-kit for flex layout component
+- react-i18next for i18n
+- zustand for state management
+- nuqs for search params management
+- SWR for data fetch
+- aHooks for react hooks library
+- dayjs for time library
+- lodash-es for utility library
+- TRPC for type safe backend
+- PGLite for client DB and Neon PostgreSQL for backend DB
+- Drizzle ORM
+- Vitest for testing
