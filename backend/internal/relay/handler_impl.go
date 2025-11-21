@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"io"
 )
 
 // ChatHandler Chat 处理器
@@ -37,7 +36,7 @@ func (ch *ChatHandler) Handle(ctx context.Context, req *HandlerRequest) (*Handle
 	headers["Content-Type"] = "application/json"
 
 	// 使用 RequestClient 发送请求
-	respBody, statusCode, err := ch.client.DoRequest(
+	respBody, respHeaders, err := ch.client.DoRequest(
 		ctx,
 		"POST",
 		req.Endpoint,
@@ -55,11 +54,19 @@ func (ch *ChatHandler) Handle(ctx context.Context, req *HandlerRequest) (*Handle
 
 	ch.RecordSuccess(int64(len(req.Body)))
 
+	// 将 http.Header 转换为 map[string]string
+	headerMap := make(map[string]string)
+	for k, v := range respHeaders {
+		if len(v) > 0 {
+			headerMap[k] = v[0]
+		}
+	}
+
 	// 验证响应
 	resp := &HandlerResponse{
-		StatusCode: statusCode,
+		StatusCode: 200, // 假设成功返回 200
 		Body:       respBody,
-		Headers:    make(map[string]string),
+		Headers:    headerMap,
 	}
 
 	if err := ch.ValidateResponse(resp); err != nil {
@@ -124,7 +131,7 @@ func (eh *EmbeddingHandler) Handle(ctx context.Context, req *HandlerRequest) (*H
 	}
 	headers["Content-Type"] = "application/json"
 
-	respBody, statusCode, err := eh.client.DoRequest(
+	respBody, respHeaders, err := eh.client.DoRequest(
 		ctx,
 		"POST",
 		req.Endpoint,
@@ -142,10 +149,18 @@ func (eh *EmbeddingHandler) Handle(ctx context.Context, req *HandlerRequest) (*H
 
 	eh.RecordSuccess(int64(len(req.Body)))
 
+	// 将 http.Header 转换为 map[string]string
+	headerMap := make(map[string]string)
+	for k, v := range respHeaders {
+		if len(v) > 0 {
+			headerMap[k] = v[0]
+		}
+	}
+
 	resp := &HandlerResponse{
-		StatusCode: statusCode,
+		StatusCode: 200,
 		Body:       respBody,
-		Headers:    make(map[string]string),
+		Headers:    headerMap,
 	}
 
 	if err := eh.ValidateResponse(resp); err != nil {
@@ -189,7 +204,7 @@ func (ih *ImageHandler) Handle(ctx context.Context, req *HandlerRequest) (*Handl
 	}
 	headers["Content-Type"] = "application/json"
 
-	respBody, statusCode, err := ih.client.DoRequest(
+	respBody, respHeaders, err := ih.client.DoRequest(
 		ctx,
 		"POST",
 		req.Endpoint,
@@ -207,10 +222,18 @@ func (ih *ImageHandler) Handle(ctx context.Context, req *HandlerRequest) (*Handl
 
 	ih.RecordSuccess(int64(len(req.Body)))
 
+	// 将 http.Header 转换为 map[string]string
+	headerMap := make(map[string]string)
+	for k, v := range respHeaders {
+		if len(v) > 0 {
+			headerMap[k] = v[0]
+		}
+	}
+
 	resp := &HandlerResponse{
-		StatusCode: statusCode,
+		StatusCode: 200,
 		Body:       respBody,
-		Headers:    make(map[string]string),
+		Headers:    headerMap,
 	}
 
 	if err := ih.ValidateResponse(resp); err != nil {
@@ -257,7 +280,7 @@ func (ah *AudioHandler) Handle(ctx context.Context, req *HandlerRequest) (*Handl
 		headers["Content-Type"] = "application/octet-stream"
 	}
 
-	respBody, statusCode, err := ah.client.DoRequest(
+	respBody, respHeaders, err := ah.client.DoRequest(
 		ctx,
 		"POST",
 		req.Endpoint,
@@ -275,10 +298,18 @@ func (ah *AudioHandler) Handle(ctx context.Context, req *HandlerRequest) (*Handl
 
 	ah.RecordSuccess(int64(len(req.Body)))
 
+	// 将 http.Header 转换为 map[string]string
+	headerMap := make(map[string]string)
+	for k, v := range respHeaders {
+		if len(v) > 0 {
+			headerMap[k] = v[0]
+		}
+	}
+
 	resp := &HandlerResponse{
-		StatusCode: statusCode,
+		StatusCode: 200,
 		Body:       respBody,
-		Headers:    make(map[string]string),
+		Headers:    headerMap,
 	}
 
 	if err := ah.ValidateResponse(resp); err != nil {
@@ -382,4 +413,3 @@ func (ah *AudioHandler) ValidateRequest(req *HandlerRequest) error {
 
 	return nil
 }
-

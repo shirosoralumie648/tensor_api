@@ -70,7 +70,7 @@ func main() {
 
 	// 需要鉴权的接口
 	protected := api.Group("")
-	protected.Use(middleware.AuthMiddleware())
+	protected.Use(middleware.AuthMiddleware([]byte(cfg.JWT.Secret)))
 	protected.Use(middleware.RateLimitMiddleware(&middleware.RateLimitConfig{
 		Rate:  100,
 		Burst: 200,
@@ -97,12 +97,12 @@ func main() {
 		// protected.GET("/billing/invoices", proxyToService(cfg.Services.BillingServiceURL))
 		// protected.POST("/billing/invoices", proxyToService(cfg.Services.BillingServiceURL))
 
-		// 管理员接口
-		admin := protected.Group("")
-		admin.Use(middleware.RoleMiddleware(100)) // role >= 100 才能访问
-		{
-			// 管理员功能...
-		}
+		// 管理员接口 (TODO: 实现 RoleMiddleware)
+		// admin := protected.Group("")
+		// admin.Use(middleware.RoleMiddleware(100)) // role >= 100 才能访问
+		// {
+		// 	// 管理员功能...
+		// }
 	}
 
 	// 健康检查

@@ -167,7 +167,7 @@ func MultiAuthMiddleware(signingKey []byte, cacheManager *cache.CacheManager) gi
 		c.Set(UserIDKey, claims.UserID)
 		c.Set(TokenKey, tokenString)
 		c.Set("user_cache", userCache)
-		c.Set("auth_method", getAuthMethodName(method))
+		// 认证方法名称已经在其他地方设置
 
 		c.Next()
 	}
@@ -205,4 +205,3 @@ func GetCachedUserInfo(c *gin.Context) (*cache.UserCache, error) {
 
 	return userCache, nil
 }
-

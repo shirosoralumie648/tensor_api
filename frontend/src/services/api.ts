@@ -1,326 +1,215 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosError } from 'axios';
+'use client'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import axios from 'axios'
 
-export interface ApiResponse<T = any> {
-  success: boolean;
-  data?: T;
-  error?: {
-    code: number;
-    message: string;
-  };
-  message?: string;
-  timestamp?: string;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+
+// 创建 API 实例
+export const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 30000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+
+// 请求拦截器
+apiClient.interceptors.request.use((config) => {
+  // 添加认证令牌
+  const token = localStorage.getItem('auth_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+
+  return config
+})
+
+// 响应拦截器
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    // 处理 401 错误 - 重定向到登录
+    if (error.response?.status === 401) {
+      localStorage.removeItem('auth_token')
+      window.location.href = '/login'
+    }
+
+    return Promise.reject(error)
+  }
+)
+
+// 聊天 API
+export const chatAPI = {
+  // 发送消息
+  sendMessage: async (messages: Array<{ role: string; content: string }>, options?: any) => {
+    return apiClient.post('/api/chat/completions', {
+      messages,
+      ...options,
+    })
+  },
+
+  // 获取会话列表
+  listSessions: async (userId?: string) => {
+    return apiClient.get('/api/sessions', {
+      params: { userId },
+    })
+  },
+
+  // 获取会话详情
+  getSession: async (sessionId: string) => {
+    return apiClient.get(`/api/sessions/${sessionId}`)
+  },
+
+  // 创建会话
+  createSession: async (title: string, model?: string) => {
+    return apiClient.post('/api/sessions', {
+      title,
+      model,
+    })
+  },
+
+  // 更新会话
+  updateSession: async (sessionId: string, data: any) => {
+    return apiClient.put(`/api/sessions/${sessionId}`, data)
+  },
+
+  // 删除会话
+  deleteSession: async (sessionId: string) => {
+    return apiClient.delete(`/api/sessions/${sessionId}`)
+  },
+
+  // 分享会话
+  shareSession: async (sessionId: string) => {
+    return apiClient.post(`/api/sessions/${sessionId}/share`)
+  },
 }
 
-export interface LoginRequest {
-  username: string;
-  password: string;
+// 模型 API
+export const modelAPI = {
+  // 获取可用模型
+  listModels: async () => {
+    return apiClient.get('/api/models')
+  },
+
+  // 获取模型详情
+  getModel: async (modelId: string) => {
+    return apiClient.get(`/api/models/${modelId}`)
+  },
 }
 
-export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
-  expires_in: number;
-  user: {
-    id: number;
-    username: string;
-    email: string;
-    display_name: string;
-    avatar_url: string;
-    role: number;
-    quota: number;
-  };
+// 认证 API
+export const authAPI = {
+  // 登录
+  login: async (email: string, password: string) => {
+    return apiClient.post('/api/auth/login', {
+      email,
+      password,
+    })
+  },
+
+  // 注册
+  register: async (email: string, password: string, name?: string) => {
+    return apiClient.post('/api/auth/register', {
+      email,
+      password,
+      name,
+    })
+  },
+
+  // 获取当前用户
+  getCurrentUser: async () => {
+    return apiClient.get('/api/auth/me')
+  },
+
+  // 登出
+  logout: async () => {
+    localStorage.removeItem('auth_token')
+    return apiClient.post('/api/auth/logout')
+  },
 }
 
-export interface RegisterRequest {
-  username: string;
-  email: string;
-  password: string;
+// 开发者 API
+export const developerAPI = {
+  // 获取 API 密钥
+  listKeys: async () => {
+    return apiClient.get('/api/developer/keys')
+  },
+
+  // 创建 API 密钥
+  createKey: async (name: string, permissions?: string[]) => {
+    return apiClient.post('/api/developer/keys', {
+      name,
+      permissions,
+    })
+  },
+
+  // 删除 API 密钥
+  deleteKey: async (keyId: string) => {
+    return apiClient.delete(`/api/developer/keys/${keyId}`)
+  },
+
+  // 获取使用统计
+  getUsageStats: async (startDate?: Date, endDate?: Date) => {
+    return apiClient.get('/api/developer/usage', {
+      params: {
+        start_date: startDate?.toISOString(),
+        end_date: endDate?.toISOString(),
+      },
+    })
+  },
+
+  // 获取账单信息
+  getBilling: async () => {
+    return apiClient.get('/api/developer/billing')
+  },
+
+  // 导出数据
+  exportData: async (format: 'json' | 'csv') => {
+    return apiClient.get('/api/developer/export', {
+      params: { format },
+      responseType: 'blob',
+    })
+  },
 }
 
-class ApiClient {
-  private client: AxiosInstance;
-  private accessToken: string | null = null;
-  private refreshToken: string | null = null;
+// 知识库 API
+export const knowledgeAPI = {
+  // 上传文档
+  uploadDocument: async (file: File, knowledgeBaseId?: string) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    if (knowledgeBaseId) {
+      formData.append('knowledge_base_id', knowledgeBaseId)
+    }
 
-  constructor() {
-    this.client = axios.create({
-      baseURL: API_BASE_URL,
-      timeout: 30000,
+    return apiClient.post('/api/knowledge/upload', formData, {
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'multipart/form-data',
       },
-    });
+    })
+  },
 
-    // 请求拦截器 - 添加 Authorization Header
-    this.client.interceptors.request.use(
-      (config) => {
-        const token = this.getAccessToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
+  // 列出文档
+  listDocuments: async (knowledgeBaseId?: string) => {
+    return apiClient.get('/api/knowledge/documents', {
+      params: { knowledge_base_id: knowledgeBaseId },
+    })
+  },
+
+  // 删除文档
+  deleteDocument: async (documentId: string) => {
+    return apiClient.delete(`/api/knowledge/documents/${documentId}`)
+  },
+
+  // 检索文档
+  searchDocuments: async (query: string, knowledgeBaseId?: string) => {
+    return apiClient.get('/api/knowledge/search', {
+      params: {
+        query,
+        knowledge_base_id: knowledgeBaseId,
       },
-      (error) => Promise.reject(error)
-    );
-
-    // 响应拦截器 - 处理错误和 Token 过期
-    this.client.interceptors.response.use(
-      (response) => response.data,
-      async (error: AxiosError<ApiResponse>) => {
-        const originalRequest = error.config;
-
-        // Token 过期，尝试刷新
-        if (error.response?.status === 401 && originalRequest) {
-          const refreshToken = this.getRefreshToken();
-          if (refreshToken) {
-            try {
-              const response = await this.refreshAccessToken(refreshToken);
-              if (response.success && response.data) {
-                const { access_token, refresh_token } = response.data;
-                this.setTokens(access_token, refresh_token);
-                
-                // 重试原始请求
-                if (originalRequest.headers) {
-                  originalRequest.headers.Authorization = `Bearer ${access_token}`;
-                }
-                return this.client(originalRequest);
-              }
-            } catch (refreshError) {
-              // 刷新失败，清除 Token 并重定向到登录
-              this.clearTokens();
-              if (typeof window !== 'undefined') {
-                window.location.href = '/login';
-              }
-              return Promise.reject(refreshError);
-            }
-          } else {
-            // 没有 refresh token，清除并重定向
-            this.clearTokens();
-            if (typeof window !== 'undefined') {
-              window.location.href = '/login';
-            }
-          }
-        }
-
-        return Promise.reject(error.response?.data || error.message);
-      }
-    );
-
-    // 从 localStorage 加载已保存的 Token
-    if (typeof window !== 'undefined') {
-      this.loadTokens();
-    }
-  }
-
-  // Token 管理
-  private getAccessToken(): string | null {
-    return this.accessToken || (typeof window !== 'undefined' ? localStorage.getItem('access_token') : null);
-  }
-
-  private getRefreshToken(): string | null {
-    return this.refreshToken || (typeof window !== 'undefined' ? localStorage.getItem('refresh_token') : null);
-  }
-
-  private loadTokens(): void {
-    this.accessToken = localStorage.getItem('access_token');
-    this.refreshToken = localStorage.getItem('refresh_token');
-  }
-
-  public setTokens(accessToken: string, refreshToken: string): void {
-    this.accessToken = accessToken;
-    this.refreshToken = refreshToken;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('access_token', accessToken);
-      localStorage.setItem('refresh_token', refreshToken);
-    }
-  }
-
-  public clearTokens(): void {
-    this.accessToken = null;
-    this.refreshToken = null;
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
-    }
-  }
-
-  // 用户认证接口
-  public async register(data: RegisterRequest): Promise<ApiResponse> {
-    return this.client.post('/api/v1/register', data);
-  }
-
-  public async login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    return this.client.post('/api/v1/login', data);
-  }
-
-  public async refreshAccessToken(refreshToken: string): Promise<ApiResponse<{ access_token: string; refresh_token: string }>> {
-    return this.client.post('/api/v1/refresh', { refresh_token: refreshToken });
-  }
-
-  // 用户信息接口
-  public async getUserProfile(): Promise<ApiResponse> {
-    return this.client.get('/api/v1/user/profile');
-  }
-
-  public async updateUserProfile(data: any): Promise<ApiResponse> {
-    return this.client.put('/api/v1/user/profile', data);
-  }
-
-  // 对话接口
-  public async createSession(data: any): Promise<ApiResponse> {
-    return this.client.post('/api/v1/chat/sessions', data);
-  }
-
-  public async getSessions(): Promise<ApiResponse> {
-    return this.client.get('/api/v1/chat/sessions');
-  }
-
-  public async getSession(id: string): Promise<ApiResponse> {
-    return this.client.get(`/api/v1/chat/sessions/${id}`);
-  }
-
-  public async updateSession(id: string, data: any): Promise<ApiResponse> {
-    return this.client.put(`/api/v1/chat/sessions/${id}`, data);
-  }
-
-  public async deleteSession(id: string): Promise<ApiResponse> {
-    return this.client.delete(`/api/v1/chat/sessions/${id}`);
-  }
-
-  public async getMessages(sessionId: string): Promise<ApiResponse> {
-    return this.client.get(`/api/v1/chat/sessions/${sessionId}/messages`);
-  }
-
-  public async sendMessage(data: any): Promise<ApiResponse> {
-    return this.client.post('/api/v1/chat/messages', data);
-  }
-
-  // 使用 Fetch API 发送流式消息（SSE）- Week 7 新增
-  public async sendMessageStreamFetch(
-    data: any,
-    onChunk: (chunk: any) => void,
-    onError?: (error: Error) => void,
-    onComplete?: () => void
-  ): Promise<void> {
-    const accessToken = this.getAccessToken();
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
-    };
-
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/chat/messages/stream`, {
-        method: 'POST',
-        headers,
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      if (!response.body) {
-        throw new Error('Response body is empty');
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
-      while (true) {
-        const { done, value } = await reader.read();
-
-        if (done) {
-          if (buffer.trim()) {
-            const match = buffer.match(/data: (.*)/);
-            if (match) {
-              try {
-                const chunk = JSON.parse(match[1]);
-                if (chunk.type === 'complete' || chunk.status === 'completed') {
-                  onChunk(chunk);
-                }
-              } catch (e) {
-                // 忽略解析错误
-              }
-            }
-          }
-          onComplete?.();
-          break;
-        }
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n\n');
-
-        // 处理完整的消息
-        for (let i = 0; i < lines.length - 1; i++) {
-          const line = lines[i].trim();
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.substring(6));
-              onChunk(data);
-            } catch (e) {
-              // 忽略解析错误
-            }
-          }
-        }
-
-        // 保留未完成的行
-        buffer = lines[lines.length - 1];
-      }
-    } catch (error) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      onError?.(err);
-      throw err;
-    }
-  }
-
-  // 计费接口（待启用）
-  public async getBillingHistory(page: number = 1, pageSize: number = 20): Promise<ApiResponse> {
-    return this.client.get('/api/v1/billing/history', {
-      params: { page, page_size: pageSize },
-    });
-  }
-
-  public async getQuotaHistory(page: number = 1, pageSize: number = 20): Promise<ApiResponse> {
-    return this.client.get('/api/v1/billing/quota-history', {
-      params: { page, page_size: pageSize },
-    });
-  }
-
-  public async getInvoices(page: number = 1, pageSize: number = 20): Promise<ApiResponse> {
-    return this.client.get('/api/v1/billing/invoices', {
-      params: { page, page_size: pageSize },
-    });
-  }
-
-  // 通用请求方法
-  public get<T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    return this.client.get(url, config);
-  }
-
-  public post<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    return this.client.post(url, data, config);
-  }
-
-  public put<T = any>(url: string, data?: any, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    return this.client.put(url, data, config);
-  }
-
-  public delete<T = any>(url: string, config?: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    return this.client.delete(url, config);
-  }
-
-  // 获取原始 axios 实例（用于特殊情况）
-  public getClient(): AxiosInstance {
-    return this.client;
-  }
+    })
+  },
 }
 
-export const apiClient = new ApiClient();
-
+export default apiClient

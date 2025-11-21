@@ -1,13 +1,10 @@
 package relay
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 // SSEMessage SSE 消息结构
@@ -81,10 +78,10 @@ type SSEManager struct {
 	maxClients int
 
 	// 统计信息
-	totalConnections   int64
-	activeConnections  int32
-	totalMessagesSent  int64
-	totalBytesSent     int64
+	totalConnections  int64
+	activeConnections int32
+	totalMessagesSent int64
+	totalBytesSent    int64
 
 	// 停止信号
 	stopChan chan struct{}
@@ -352,4 +349,3 @@ func (client *SSEClient) GetClientInfo() map[string]interface{} {
 		"connected_duration": time.Since(client.CreatedAt).Seconds(),
 	}
 }
-

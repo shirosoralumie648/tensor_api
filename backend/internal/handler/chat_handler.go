@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"oblivious/internal/adapter"
-	"oblivious/internal/middleware"
+	"github.com/oblivious/backend/internal/adapter"
+	"github.com/oblivious/backend/internal/middleware"
 )
 
 // ChatCompletionRequest 聊天完成请求

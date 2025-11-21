@@ -2,18 +2,26 @@ package model
 
 import (
 	"database/sql"
+	"errors"
 	"time"
+)
+
+// 错误定义
+var (
+	ErrTokenInvalid        = errors.New("token is invalid")
+	ErrQuotaExceeded       = errors.New("quota exceeded")
+	ErrInvalidRefundAmount = errors.New("invalid refund amount")
 )
 
 // TokenStatus Token 状态枚举
 type TokenStatus int
 
 const (
-	TokenStatusNormal     TokenStatus = 1 // 正常
-	TokenStatusExhausted  TokenStatus = 2 // 已耗尽
-	TokenStatusDisabled   TokenStatus = 3 // 已禁用
-	TokenStatusExpired    TokenStatus = 4 // 已过期
-	TokenStatusDeleted    TokenStatus = 5 // 已删除（软删除）
+	TokenStatusNormal    TokenStatus = 1 // 正常
+	TokenStatusExhausted TokenStatus = 2 // 已耗尽
+	TokenStatusDisabled  TokenStatus = 3 // 已禁用
+	TokenStatusExpired   TokenStatus = 4 // 已过期
+	TokenStatusDeleted   TokenStatus = 5 // 已删除（软删除）
 )
 
 // TokenStatusName Token 状态名称映射
@@ -27,23 +35,23 @@ var TokenStatusName = map[TokenStatus]string{
 
 // Token API Token 模型
 type Token struct {
-	ID               int
-	UserID           int
-	TokenHash        string
-	Name             string
-	Description      sql.NullString
-	Status           TokenStatus
-	QuotaLimit       sql.NullInt64
-	QuotaUsed        int64
-	CreatedAt        time.Time
-	ExpireAt         sql.NullTime
-	RenewedAt        sql.NullTime
-	DeletedAt        sql.NullTime
-	LastUsedAt       sql.NullTime
-	IPWhitelist      []string
-	ModelWhitelist   []string
-	Metadata         map[string]interface{}
-	UpdatedAt        time.Time
+	ID             int
+	UserID         int
+	TokenHash      string
+	Name           string
+	Description    sql.NullString
+	Status         TokenStatus
+	QuotaLimit     sql.NullInt64
+	QuotaUsed      int64
+	CreatedAt      time.Time
+	ExpireAt       sql.NullTime
+	RenewedAt      sql.NullTime
+	DeletedAt      sql.NullTime
+	LastUsedAt     sql.NullTime
+	IPWhitelist    []string
+	ModelWhitelist []string
+	Metadata       map[string]interface{}
+	UpdatedAt      time.Time
 }
 
 // TokenAuditLog Token 审计日志
@@ -230,4 +238,3 @@ const (
 	TokenOpExpire   TokenOperationType = "expire"
 	TokenOpUseQuota TokenOperationType = "use_quota"
 )
-

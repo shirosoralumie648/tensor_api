@@ -144,28 +144,4 @@ func APIKeyAuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// RateLimitMiddleware 速率限制中间件
-func RateLimitMiddleware(requestsPerMinute int) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// TODO: 实现速率限制逻辑
-		// 可以使用 Redis 或内存缓存实现
-		c.Next()
-	}
-}
-
-// CORSMiddleware CORS 中间件
-func CORSMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, X-API-Key")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
-
-		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
-			return
-		}
-
-		c.Next()
-	}
-}
+// RateLimitMiddleware 和 CORSMiddleware 已在其他文件中定义

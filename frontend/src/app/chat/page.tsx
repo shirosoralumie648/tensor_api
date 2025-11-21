@@ -1,238 +1,100 @@
-'use client';
+'use client'
 
-import React, { useState, useRef, useEffect } from 'react';
-import { Button, Input, Card, Spinner, FileUpload } from '@/components/ui';
-import { HStack, VStack } from '@/components/layout';
-import { Send, Plus, Menu, Settings, LogOut, Home, Globe } from 'lucide-react';
-import Link from 'next/link';
-import { useStreamingChat } from '@/hooks/useStreamingChat';
-import { useTranslation } from '@/hooks/useTranslation';
-
-interface Conversation {
-  id: string;
-  title: string;
-  created: Date;
-}
+import { useEffect, useState } from 'react'
+import { SessionSidebar } from '@/components/SessionSidebar'
+import { ChatBox } from '@/components/ChatBox'
+import { useChatStore } from '@/stores/chatStore'
 
 export default function ChatPage() {
-  const { t, language, setLanguage } = useTranslation();
-  const conversationId = 'conv-' + Date.now();
-  const { messages, isLoading, error, sendMessage } = useStreamingChat({
-    conversationId,
-    onConnected: () => console.log(t('chat.connected')),
-    onError: (err) => console.error(err.message),
-  });
+  const { currentSessionId, setCurrentSession, sessions } = useChatStore()
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
-  const [input, setInput] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [showFileUpload, setShowFileUpload] = useState(false);
-  const [conversations, setConversations] = useState<Conversation[]>([
-    { id: '1', title: 'Welcome', created: new Date() },
-  ]);
-
-  const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
+  // 如果没有选中会话，自动选择第一个或创建新的
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSendMessage = async () => {
-    if (!input.trim()) return;
-    sendMessage(input);
-    setInput('');
-  };
+    if (!currentSessionId && sessions.length > 0) {
+      setCurrentSession(sessions[0].id)
+    }
+  }, [currentSessionId, sessions, setCurrentSession])
 
   return (
-    <div className="h-screen flex bg-white dark:bg-neutral-900">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-white dark:bg-dark-900">
+      {/* 侧边栏 - 移动端隐藏 */}
       <div
-        className={`fixed md:relative z-40 w-64 h-screen border-r border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 flex flex-col transition-transform duration-300 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-        }`}
+        className={`${
+          isSidebarOpen ? 'w-sidebar' : 'w-0'
+        } transition-all duration-300 hidden md:block overflow-hidden`}
       >
-        <div className="p-4 border-b border-neutral-200 dark:border-neutral-700">
-          <Button fullWidth className="gap-2">
-            <Plus size={20} />
-            New Chat
-          </Button>
-        </div>
-
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
-          <div className="text-xs font-semibold text-neutral-500 uppercase px-2 mb-3">
-            Conversations
-          </div>
-          {conversations.map(conv => (
-            <button
-              key={conv.id}
-              className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition text-sm text-neutral-700 dark:text-neutral-300"
-            >
-              {conv.title}
-            </button>
-          ))}
-        </div>
-
-        <div className="border-t border-neutral-200 dark:border-neutral-700 p-4 space-y-2">
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition text-sm text-neutral-700 dark:text-neutral-300">
-            <Settings size={18} />
-            {t('nav.settings')}
-          </button>
-          <div className="relative group">
-            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition text-sm text-neutral-700 dark:text-neutral-300">
-              <Globe size={18} />
-              {language.toUpperCase()}
-            </button>
-            <div className="hidden group-hover:block absolute bottom-full left-0 right-0 bg-white dark:bg-neutral-700 border border-neutral-200 dark:border-neutral-600 rounded-lg overflow-hidden z-50">
-              {(['en', 'zh', 'ja', 'es', 'fr', 'de'] as const).map(lang => (
-                <button
-                  key={lang}
-                  onClick={() => setLanguage(lang)}
-                  className="w-full text-left px-3 py-2 hover:bg-neutral-100 dark:hover:bg-neutral-600 transition text-sm"
-                >
-                  {lang.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-          <Link href="/">
-            <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition text-sm text-neutral-700 dark:text-neutral-300">
-              <Home size={18} />
-              {t('nav.home')}
-            </button>
-          </Link>
-          <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition text-sm text-red-600 dark:text-red-400">
-            <LogOut size={18} />
-            {t('nav.logout')}
-          </button>
-        </div>
+        <SessionSidebar />
       </div>
 
-      {/* Main Content */}
+      {/* 主容器 */}
       <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="h-16 border-b border-neutral-200 dark:border-neutral-700 px-4 flex items-center justify-between">
+        {/* 顶部栏 */}
+        <div className="h-header border-b border-gray-200 dark:border-dark-700 flex items-center px-4 gap-4">
+          {/* 移动端侧边栏切换 */}
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="md:hidden p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-lg transition"
+            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            className="md:hidden p-2 hover:bg-gray-100 dark:hover:bg-dark-800 rounded"
           >
-            <Menu size={24} />
-          </button>
-          <div className="text-lg font-semibold text-neutral-900 dark:text-white">
-            Chat
-          </div>
-          <div className="w-8" />
-        </div>
-
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4">
-          {messages.map(message => (
-            <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-              <div
-                className={`max-w-xs md:max-w-2xl px-4 py-3 rounded-2xl ${
-                  message.role === 'user'
-                    ? 'bg-primary-500 text-white rounded-br-none'
-                    : 'bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-bl-none'
-                }`}
-              >
-                <p className="text-sm leading-relaxed">{message.content}</p>
-                <p className={`text-xs mt-1 ${message.role === 'user' ? 'text-primary-100' : 'text-neutral-500'}`}>
-                  {message.timestamp.toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
-              </div>
-            </div>
-          ))}
-
-          {isLoading && (
-            <div className="flex justify-start">
-              <div className="bg-neutral-100 dark:bg-neutral-800 px-4 py-3 rounded-2xl rounded-bl-none">
-                <Spinner size="sm" />
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input Area */}
-        <div className="border-t border-neutral-200 dark:border-neutral-700 p-4 md:p-6 bg-white dark:bg-neutral-900">
-          <div className="max-w-4xl mx-auto space-y-4">
-            {/* File Upload Section */}
-            {showFileUpload && (
-              <FileUpload
-                label={t('chat.attachFile')}
-                maxFiles={5}
-                maxSize={50 * 1024 * 1024}
-                onUpload={(files: any[]) => {
-                  console.log('Files uploaded:', files);
-                  setShowFileUpload(false);
-                }}
-              />
-            )}
-
-            {/* Input Form */}
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSendMessage();
-              }}
-              className="flex gap-3"
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <Input
-                placeholder={t('chat.placeholder')}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={isLoading}
-                containerClassName="flex-1"
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
               />
-              <Button
-                type="button"
-                onClick={() => setShowFileUpload(!showFileUpload)}
-                variant="outline"
-                size="md"
-                className="px-4"
-                title={t('chat.attachFile')}
-              >
-                📎
-              </Button>
-              <Button
-                type="submit"
-                loading={isLoading}
-                disabled={!input.trim() || isLoading}
-                size="md"
-                className="px-6"
-              >
-                <Send size={20} />
-              </Button>
-            </form>
+            </svg>
+          </button>
 
-            {error && (
-              <div className="p-2 rounded-lg bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800">
-                <p className="text-xs text-red-600 dark:text-red-400">
-                  {t('common.error')}: {error.message}
-                </p>
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">
+            对话
+          </h1>
+
+          {/* 右侧操作区 */}
+          <div className="ml-auto flex items-center gap-4">
+            {/* 模型选择 */}
+            <select
+              defaultValue="gpt-3.5-turbo"
+              className="input px-3 py-2 text-sm"
+            >
+              <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+              <option value="gpt-4">GPT-4</option>
+              <option value="claude-3">Claude 3</option>
+              <option value="gemini-pro">Gemini Pro</option>
+            </select>
+
+            {/* 用户菜单 */}
+            <button className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-dark-800 rounded">
+              <div className="w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white text-sm font-semibold">
+                U
               </div>
-            )}
-
-            <p className="text-xs text-neutral-500 mt-2">
-              {t('chat.sendHint')}
-            </p>
+            </button>
           </div>
         </div>
+
+        {/* 聊天主体 */}
+        <ChatBox />
       </div>
 
-      {/* Overlay */}
-      {sidebarOpen && (
+      {/* 移动端侧边栏悬浮 */}
+      {isSidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 md:hidden z-30"
-          onClick={() => setSidebarOpen(false)}
-        />
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setIsSidebarOpen(false)}
+        >
+          <div
+            className="absolute inset-y-0 left-0 w-sidebar bg-gray-50 dark:bg-dark-800"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SessionSidebar />
+          </div>
+        </div>
       )}
     </div>
-  );
+  )
 }

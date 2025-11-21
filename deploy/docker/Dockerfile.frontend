@@ -33,9 +33,9 @@ RUN npm install --only=production
 # 暴露端口
 EXPOSE 3000
 
-# 健康检查
+# 健康检查 - 直接检查首页
 HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+  CMD node -e "require('http').get('http://localhost:3000/', (r) => {if (r.statusCode !== 200 && r.statusCode !== 301 && r.statusCode !== 302) throw new Error(r.statusCode)})"
 
 # 启动应用
 CMD ["npm", "start"]

@@ -1,7 +1,6 @@
 package relay
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"time"
@@ -258,4 +257,3 @@ func (h *SSEHandler) RegisterSSERoutesWithAuth(
 	sseGroup.POST("/send/:clientID", h.HandleSendToClient())
 	sseGroup.GET("/stats", adminMiddleware, h.HandleStatistics())
 }
-

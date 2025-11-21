@@ -2,7 +2,6 @@ package relay
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 	"sort"
 	"strings"
@@ -60,9 +59,9 @@ type ChannelSelector struct {
 	wildcardMu    sync.RWMutex
 
 	// 统计信息
-	totalSelections  int64
-	statisticsCache  map[string]*SelectorStatistics
-	statisticsMu     sync.RWMutex
+	totalSelections int64
+	statisticsCache map[string]*SelectorStatistics
+	statisticsMu    sync.RWMutex
 
 	// 日志函数
 	logFunc func(level, msg string, args ...interface{})
@@ -110,12 +109,12 @@ type SelectorStatistics struct {
 // NewChannelSelector 创建新的渠道选择器
 func NewChannelSelector(cache *ChannelCache, strategy ChannelSelectorStrategy) *ChannelSelector {
 	return &ChannelSelector{
-		cache:            cache,
-		strategy:         strategy,
+		cache:             cache,
+		strategy:          strategy,
 		roundRobinCounter: 0,
-		wildcardRules:    make(map[string]*WildcardRule),
-		statisticsCache:  make(map[string]*SelectorStatistics),
-		logFunc:          defaultLogFunc,
+		wildcardRules:     make(map[string]*WildcardRule),
+		statisticsCache:   make(map[string]*SelectorStatistics),
+		logFunc:           defaultLogFunc,
 	}
 }
 
@@ -420,7 +419,7 @@ type ChannelSelectorManager struct {
 	defaultSelector *ChannelSelector
 
 	// 按类型的选择器
-	selectors map[string]*ChannelSelector
+	selectors   map[string]*ChannelSelector
 	selectorsMu sync.RWMutex
 
 	// 规则管理器
@@ -575,12 +574,4 @@ func (wrm *WildcardRuleManager) ApplyRulesToSelector(selector *ChannelSelector) 
 	return nil
 }
 
-// defaultLogFunc 默认日志函数
-func defaultLogFunc(level, msg string, args ...interface{}) {
-	fmt.Printf("[%s] %s", level, msg)
-	if len(args) > 0 {
-		fmt.Printf(" %v", args)
-	}
-	fmt.Println()
-}
-
+// defaultLogFunc 已在 body_recovery.go 中定义

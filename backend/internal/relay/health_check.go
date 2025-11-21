@@ -1,7 +1,6 @@
 package relay
 
 import (
-	"context"
 	"fmt"
 	"net/http"
 	"sync"
@@ -39,14 +38,14 @@ type HealthCheckConfig struct {
 // DefaultHealthCheckConfig 默认配置
 func DefaultHealthCheckConfig() *HealthCheckConfig {
 	return &HealthCheckConfig{
-		Interval:                   5 * time.Minute,
-		Timeout:                    10 * time.Second,
-		MaxRetries:                 3,
-		HealthyThreshold:           95.0,
-		DegradedThreshold:          50.0,
-		MaxConsecutiveFailures:     5,
-		RecoveryInterval:           1 * time.Minute,
-		HealthCheckEndpoint:        "/health",
+		Interval:               5 * time.Minute,
+		Timeout:                10 * time.Second,
+		MaxRetries:             3,
+		HealthyThreshold:       95.0,
+		DegradedThreshold:      50.0,
+		MaxConsecutiveFailures: 5,
+		RecoveryInterval:       1 * time.Minute,
+		HealthCheckEndpoint:    "/health",
 	}
 }
 
@@ -245,9 +244,17 @@ func (hc *HealthChecker) shouldCheck(state *channelCheckState) bool {
 
 // performCheck 执行检查
 func (hc *HealthChecker) performCheck(ch *Channel) *HealthCheckResult {
+	// 从 atomic.Value 加载状态
+	var status ChannelStatus
+	if s := ch.Status.Load(); s != nil {
+		status = s.(ChannelStatus)
+	} else {
+		status = ChannelStatusHealthy
+	}
+
 	result := &HealthCheckResult{
 		ChannelID: ch.ID,
-		Status:    ch.Status,
+		Status:    status,
 	}
 
 	// 构建检查 URL
@@ -362,13 +369,13 @@ func (hc *HealthChecker) GetStatistics() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"total_checks":    total,
-		"success_count":   success,
-		"failure_count":   failure,
-		"success_rate":    successRate,
-		"interval":        hc.config.Interval.String(),
-		"timeout":         hc.config.Timeout.String(),
-		"check_states":    len(hc.checkStates),
+		"total_checks":  total,
+		"success_count": success,
+		"failure_count": failure,
+		"success_rate":  successRate,
+		"interval":      hc.config.Interval.String(),
+		"timeout":       hc.config.Timeout.String(),
+		"check_states":  len(hc.checkStates),
 	}
 }
 
@@ -399,7 +406,7 @@ func (hc *HealthChecker) SetResultCallback(callback func(*HealthCheckResult)) {
 // HealthCheckManager 健康检查管理器
 type HealthCheckManager struct {
 	// 健康检查器映射
-	checkers map[string]*HealthChecker
+	checkers   map[string]*HealthChecker
 	checkersMu sync.RWMutex
 
 	// 日志函数
@@ -598,4 +605,3 @@ func (cb *CircuitBreaker) GetState() CircuitState {
 
 	return cb.state
 }
-

@@ -89,6 +89,16 @@ type ChannelMetrics struct {
 	CurrentConcurrency int64 `json:"current_concurrency"`
 }
 
+// GetSuccessRate 计算成功率
+func (cm *ChannelMetrics) GetSuccessRate() float64 {
+	total := atomic.LoadInt64(&cm.TotalRequests)
+	if total == 0 {
+		return 0
+	}
+	successful := atomic.LoadInt64(&cm.SuccessfulRequests)
+	return float64(successful) / float64(total) * 100
+}
+
 // ChannelKey 渠道密钥
 type ChannelKey struct {
 	// 密钥 ID
@@ -237,7 +247,7 @@ func (ch *Channel) RecordSuccess(latency int64) {
 	atomic.StoreInt64(&ch.Metrics.ConsecutiveFailures, 0)
 
 	// 更新平均延迟（简单平均）
-	total := atomic.LoadInt64(&ch.Metrics.TotalRequests)
+	_ = atomic.LoadInt64(&ch.Metrics.TotalRequests) // total 暂未使用
 	successCount := atomic.LoadInt64(&ch.Metrics.SuccessfulRequests)
 	currentAvg := ch.Metrics.AvgLatency
 	newAvg := (currentAvg*float64(successCount-1) + float64(latency)) / float64(successCount)

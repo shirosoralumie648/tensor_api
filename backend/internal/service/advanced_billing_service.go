@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/oblivious/backend/internal/model"
 	"gorm.io/gorm"
-	"oblivious/internal/model"
 )
 
 // AdvancedBillingService 高级计费服务
@@ -366,4 +366,3 @@ func generateID() string {
 	// 使用 UUID 生成唯一 ID
 	return fmt.Sprintf("%d", time.Now().UnixNano())
 }
-

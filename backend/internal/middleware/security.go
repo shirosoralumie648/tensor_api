@@ -11,8 +11,6 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/didip/tollbooth"
-	"github.com/didip/tollbooth/limiter"
 )
 
 // SecurityHeaders 添加安全响应头
@@ -43,28 +41,7 @@ func SecurityHeaders() gin.HandlerFunc {
 	}
 }
 
-// RateLimitMiddleware 速率限制中间件
-func RateLimitMiddleware(requestsPerSecond float64) gin.HandlerFunc {
-	lmt := tollbooth.NewLimiter(requestsPerSecond, &limiter.ExpirableOptions{
-		DefaultExpirationTTL: time.Hour,
-	})
-
-	// 为 API 密钥和用户 ID 设置自定义限制
-	lmt.SetIPLookups([]string{"RemoteAddr", "X-Forwarded-For", "X-Real-IP"})
-
-	return func(c *gin.Context) {
-		httpError := tollbooth.LimitByRequest(lmt, c.Writer, c.Request)
-		if httpError != nil {
-			c.JSON(http.StatusTooManyRequests, gin.H{
-				"error":       "too many requests",
-				"retry_after": httpError.RetryAfter,
-			})
-			c.Abort()
-			return
-		}
-		c.Next()
-	}
-}
+// RateLimitMiddleware 已在 rate_limit.go 中定义
 
 // InputValidationMiddleware 输入验证中间件
 func InputValidationMiddleware() gin.HandlerFunc {
@@ -238,18 +215,7 @@ func TLSEnforcementMiddleware() gin.HandlerFunc {
 	}
 }
 
-// RequestIDMiddleware 添加请求 ID 用于追踪
-func RequestIDMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		requestID := c.GetHeader("X-Request-ID")
-		if requestID == "" {
-			requestID = generateRequestID()
-		}
-		c.Set("request_id", requestID)
-		c.Header("X-Request-ID", requestID)
-		c.Next()
-	}
-}
+// RequestIDMiddleware 已在 request_id.go 中定义
 
 // LoggingMiddleware 安全的日志记录
 func LoggingMiddleware() gin.HandlerFunc {
@@ -297,7 +263,7 @@ func SecureCORSMiddleware() gin.HandlerFunc {
 
 		// 白名单检查
 		allowedOrigins := map[string]bool{
-			"https://oblivious.com": true,
+			"https://oblivious.com":     true,
 			"https://app.oblivious.com": true,
 		}
 
@@ -372,4 +338,3 @@ func ValidateTLSConfig(certFile, keyFile string) (*tls.Config, error) {
 
 	return tlsConfig, nil
 }
-

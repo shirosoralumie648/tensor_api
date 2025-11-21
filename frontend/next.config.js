@@ -3,46 +3,72 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   
-  // 静态导出模式（用于 Docker 部署）
-  output: process.env.BUILD_MODE === 'standalone' ? 'standalone' : undefined,
-  
+  // 图片优化
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
+    unoptimized: process.env.NODE_ENV === 'development',
+  },
+
+  // 重写 API 请求
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/api/:path*',
+          destination: process.env.NEXT_PUBLIC_API_URL
+            ? `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`
+            : 'http://localhost:8080/api/:path*',
+        },
+      ],
+    };
+  },
+
   // 环境变量
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080',
-    NEXT_PUBLIC_APP_NAME: 'Oblivious',
   },
-  
-  // 图片优化
-  images: {
-    domains: ['localhost', 'your-cdn-domain.com'],
-    unoptimized: process.env.BUILD_MODE === 'export',
-  },
-  
-  // 国际化
-  i18n: {
-    locales: ['zh-CN', 'en-US'],
-    defaultLocale: 'zh-CN',
-  },
-  
-  // Webpack 配置
+
+  // webpack 配置
   webpack: (config, { isServer }) => {
-    // 客户端 bundle 优化
-    if (!isServer) {
-      config.resolve.fallback = {
-        ...config.resolve.fallback,
-        fs: false,
-        net: false,
-        tls: false,
-      };
-    }
+    config.module.rules.push({
+      test: /\.svg$/,
+      use: ['@svgr/webpack'],
+    });
+
     return config;
   },
-  
-  // 实验性功能
-  experimental: {
-    optimizePackageImports: ['antd', '@ant-design/icons'],
+
+  // 性能优化
+  compress: true,
+  productionBrowserSourceMaps: false,
+
+  // 自定义头部
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'DENY',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+        ],
+      },
+    ];
   },
 };
 
 module.exports = nextConfig;
-

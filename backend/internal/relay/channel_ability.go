@@ -3,7 +3,6 @@ package relay
 import (
 	"encoding/json"
 	"fmt"
-	"sort"
 	"sync"
 	"time"
 )
@@ -76,7 +75,7 @@ type FeatureConfig struct {
 // ChannelAbilityManager 渠道能力管理器
 type ChannelAbilityManager struct {
 	// 能力版本映射 (channelID -> version -> ChannelAbilityVersion)
-	abilities map[string]map[string]*ChannelAbilityVersion
+	abilities   map[string]map[string]*ChannelAbilityVersion
 	abilitiesMu sync.RWMutex
 
 	// 默认版本映射 (channelID -> defaultVersion)
@@ -408,9 +407,9 @@ func (cam *ChannelAbilityManager) GetAbilityComparison(channelID, version1, vers
 	}
 
 	return map[string]interface{}{
-		"new_models":      newModels,
-		"removed_models":  removedModels,
-		"new_features":    newFeatures,
+		"new_models":       newModels,
+		"removed_models":   removedModels,
+		"new_features":     newFeatures,
 		"removed_features": removedFeatures,
 	}, nil
 }
@@ -551,4 +550,3 @@ func (cac *ChannelAbilityConfig) BuildAbilityVersion(description string) *Channe
 
 	return version
 }
-

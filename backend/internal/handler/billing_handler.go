@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"oblivious/internal/model"
-	"oblivious/internal/service"
+	"github.com/oblivious/backend/internal/model"
+	"github.com/oblivious/backend/internal/service"
 )
 
 // BillingHandler 计费处理器

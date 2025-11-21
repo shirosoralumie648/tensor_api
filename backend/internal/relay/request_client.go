@@ -9,40 +9,7 @@ import (
 	"time"
 )
 
-// Channel 代表一个中继渠道（API 服务提供商）
-type Channel struct {
-	// 渠道 ID
-	ID string
-
-	// 渠道名称
-	Name string
-
-	// 基础 URL
-	BaseURL string
-
-	// API Key
-	APIKey string
-
-	// 是否启用
-	Enabled bool
-
-	// 优先级（数值越小优先级越高）
-	Priority int
-
-	// 权重（用于负载均衡）
-	Weight int
-
-	// 支持的模型
-	SupportedModels []string
-
-	// 统计信息
-	RequestCount     int64
-	SuccessCount     int64
-	FailureCount     int64
-	AvgLatencyMs     int64
-	LastRequestTime  time.Time
-	ConsecutiveFailures int32
-}
+// Channel 已在 channel_model.go 中定义
 
 // RequestClient 请求客户端
 type RequestClient struct {
@@ -59,10 +26,10 @@ type RequestClient struct {
 	currentChannelIndex int
 
 	// 统计信息
-	totalRequests    int64
-	successRequests  int64
-	failedRequests   int64
-	channelSwitches  int64
+	totalRequests   int64
+	successRequests int64
+	failedRequests  int64
+	channelSwitches int64
 }
 
 // NewRequestClient 创建新的请求客户端
@@ -90,8 +57,11 @@ func (rc *RequestClient) SetRetryPolicy(policy *RetryPolicy) {
 func (rc *RequestClient) GetAvailableChannels() []*Channel {
 	var available []*Channel
 	for _, ch := range rc.channels {
-		if ch.Enabled && ch.ConsecutiveFailures < 3 {
-			available = append(available, ch)
+		if ch.Enabled {
+			// 检查连续失败次数
+			if ch.Metrics == nil || atomic.LoadInt64(&ch.Metrics.ConsecutiveFailures) < 3 {
+				available = append(available, ch)
+			}
 		}
 	}
 	return available
@@ -107,11 +77,11 @@ func (rc *RequestClient) SelectChannel(model string) *Channel {
 	// 过滤支持该模型的渠道
 	supportedChannels := make([]*Channel, 0)
 	for _, ch := range available {
-		if len(ch.SupportedModels) == 0 {
-			// 如果没有模型限制，则支持所有模型
+		// 如果没有 Ability 配置，默认支持所有模型
+		if ch.Ability == nil || len(ch.Ability.SupportedModels) == 0 {
 			supportedChannels = append(supportedChannels, ch)
 		} else {
-			for _, m := range ch.SupportedModels {
+			for _, m := range ch.Ability.SupportedModels {
 				if m == model || m == "*" {
 					supportedChannels = append(supportedChannels, ch)
 					break
@@ -132,7 +102,9 @@ func (rc *RequestClient) SelectChannel(model string) *Channel {
 // SwitchChannel 切换到下一个渠道
 func (rc *RequestClient) SwitchChannel(currentChannel *Channel) *Channel {
 	// 标记当前渠道失败
-	currentChannel.ConsecutiveFailures++
+	if currentChannel.Metrics != nil {
+		atomic.AddInt64(&currentChannel.Metrics.ConsecutiveFailures, 1)
+	}
 	atomic.AddInt64(&rc.channelSwitches, 1)
 
 	// 选择下一个渠道
@@ -163,7 +135,7 @@ func (rc *RequestClient) DoRequest(
 	var lastErr error
 
 	// 使用重试机制
-	success, err := RetryWithCallback(
+	_, err := RetryWithCallback(
 		ctx,
 		rc.retryPolicy,
 		func(ctx context.Context, retryCtx *RetryContext) error {
@@ -183,7 +155,7 @@ func (rc *RequestClient) DoRequest(
 			}
 
 			// 发送请求
-			respBody, respHeader, err := rc.doSingleRequest(ctx, channel, method, path, body, headers)
+			_, _, err := rc.doSingleRequest(ctx, channel, method, path, body, headers)
 			if err != nil {
 				// 包装为可重试错误
 				retryErr := &RetryableError{
@@ -201,13 +173,11 @@ func (rc *RequestClient) DoRequest(
 				Delay:      retryCtx.Delay,
 			}
 
-			// 这里需要返回响应数据，但签名不支持
-			// 所以我们把数据存储在闭包外部
 			return nil
 		},
 	)
 
-	if !success {
+	if err != nil {
 		atomic.AddInt64(&rc.failedRequests, 1)
 		return nil, nil, lastErr
 	}
@@ -235,7 +205,9 @@ func (rc *RequestClient) doSingleRequest(
 	}
 
 	// 添加认证头
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", channel.APIKey))
+	if len(channel.Keys) > 0 && channel.Keys[0].APIKey != "" {
+		req.Header.Set("Authorization", "Bearer "+channel.Keys[0].APIKey)
+	}
 
 	// 添加自定义头
 	for key, value := range headers {
@@ -247,16 +219,21 @@ func (rc *RequestClient) doSingleRequest(
 
 	// 发送请求
 	resp, err := rc.httpClient.Do(req)
-	latency := time.Since(startTime)
+	_ = time.Since(startTime) // latency 未使用
 
 	// 更新统计
-	atomic.AddInt64(&channel.RequestCount, 1)
-	atomic.StoreInt64(&channel.AvgLatencyMs, latency.Milliseconds())
-	channel.LastRequestTime = time.Now()
+	if channel.Metrics != nil {
+		atomic.AddInt64(&channel.Metrics.TotalRequests, 1)
+		latencyMs := time.Since(startTime).Milliseconds()
+		channel.RecordSuccess(latencyMs)
+	}
+	// LastRequestTime 已在 Metrics 中跟踪
 	atomic.AddInt64(&rc.totalRequests, 1)
 
 	if err != nil {
-		channel.ConsecutiveFailures++
+		if channel.Metrics != nil {
+			atomic.AddInt64(&channel.Metrics.ConsecutiveFailures, 1)
+		}
 		return nil, nil, &RetryableError{
 			StatusCode: 0,
 			Message:    err.Error(),
@@ -269,7 +246,9 @@ func (rc *RequestClient) doSingleRequest(
 	// 读取响应体
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		channel.ConsecutiveFailures++
+		if channel.Metrics != nil {
+			atomic.AddInt64(&channel.Metrics.ConsecutiveFailures, 1)
+		}
 		return nil, resp.Header, &RetryableError{
 			StatusCode: resp.StatusCode,
 			Message:    err.Error(),
@@ -279,13 +258,17 @@ func (rc *RequestClient) doSingleRequest(
 
 	// 检查状态码
 	if resp.StatusCode >= 400 {
-		channel.ConsecutiveFailures++
-		
+		if channel.Metrics != nil {
+			atomic.AddInt64(&channel.Metrics.ConsecutiveFailures, 1)
+		}
+
 		// 检查 Retry-After 头
 		retryAfter := time.Duration(0)
 		if retryAfterStr := resp.Header.Get("Retry-After"); retryAfterStr != "" {
 			// 解析 Retry-After
-			if seconds := 0; _, err := fmt.Sscanf(retryAfterStr, "%d", &seconds); err == nil {
+			var seconds int
+			_, err := fmt.Sscanf(retryAfterStr, "%d", &seconds)
+			if err == nil && seconds > 0 {
 				retryAfter = time.Duration(seconds) * time.Second
 			}
 		}
@@ -299,8 +282,10 @@ func (rc *RequestClient) doSingleRequest(
 	}
 
 	// 成功
-	channel.ConsecutiveFailures = 0
-	atomic.AddInt64(&channel.SuccessCount, 1)
+	if channel.Metrics != nil {
+		atomic.StoreInt64(&channel.Metrics.ConsecutiveFailures, 0)
+		atomic.AddInt64(&channel.Metrics.SuccessfulRequests, 1)
+	}
 
 	return respBody, resp.Header, nil
 }
@@ -318,11 +303,11 @@ func (rc *RequestClient) GetStatistics() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"total_requests":    total,
-		"success_requests":  success,
-		"failed_requests":   failed,
-		"success_rate":      successRate,
-		"channel_switches":  switches,
+		"total_requests":   total,
+		"success_requests": success,
+		"failed_requests":  failed,
+		"success_rate":     successRate,
+		"channel_switches": switches,
 	}
 }
 
@@ -332,10 +317,22 @@ func (rc *RequestClient) GetChannelStatistics() []map[string]interface{} {
 
 	for _, ch := range rc.channels {
 		successRate := 0.0
-		totalRequests := atomic.LoadInt64(&ch.RequestCount)
-		if totalRequests > 0 {
-			successCount := atomic.LoadInt64(&ch.SuccessCount)
-			successRate = float64(successCount) / float64(totalRequests) * 100
+		var totalRequests int64
+		var successCount int64
+		var failureCount int64
+		var avgLatency float64
+		var consecutiveFailures int64
+
+		if ch.Metrics != nil {
+			totalRequests = atomic.LoadInt64(&ch.Metrics.TotalRequests)
+			successCount = atomic.LoadInt64(&ch.Metrics.SuccessfulRequests)
+			failureCount = atomic.LoadInt64(&ch.Metrics.FailedRequests)
+			avgLatency = ch.Metrics.AvgLatency
+			consecutiveFailures = atomic.LoadInt64(&ch.Metrics.ConsecutiveFailures)
+
+			if totalRequests > 0 {
+				successRate = float64(successCount) / float64(totalRequests) * 100
+			}
 		}
 
 		result = append(result, map[string]interface{}{
@@ -345,11 +342,11 @@ func (rc *RequestClient) GetChannelStatistics() []map[string]interface{} {
 			"priority":             ch.Priority,
 			"weight":               ch.Weight,
 			"request_count":        totalRequests,
-			"success_count":        atomic.LoadInt64(&ch.SuccessCount),
-			"failure_count":        atomic.LoadInt64(&ch.FailureCount),
+			"success_count":        successCount,
+			"failure_count":        failureCount,
 			"success_rate":         successRate,
-			"avg_latency_ms":       atomic.LoadInt64(&ch.AvgLatencyMs),
-			"consecutive_failures": atomic.LoadInt32(&ch.ConsecutiveFailures),
+			"avg_latency_ms":       avgLatency,
+			"consecutive_failures": consecutiveFailures,
 		})
 	}
 
@@ -360,10 +357,11 @@ func (rc *RequestClient) GetChannelStatistics() []map[string]interface{} {
 func (rc *RequestClient) RecoverChannel(channelID string) error {
 	for _, ch := range rc.channels {
 		if ch.ID == channelID {
-			ch.ConsecutiveFailures = 0
+			if ch.Metrics != nil {
+				atomic.StoreInt64(&ch.Metrics.ConsecutiveFailures, 0)
+			}
 			return nil
 		}
 	}
 	return fmt.Errorf("channel not found")
 }
-

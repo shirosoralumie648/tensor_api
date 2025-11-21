@@ -1,282 +1,138 @@
-'use client';
+'use client'
 
-import React from 'react';
-import { Button } from '@/components/ui';
-import { Container, VStack, HStack } from '@/components/layout';
-import { ArrowRight, Zap, MessageSquare, Shield, Cpu, Globe } from 'lucide-react';
-import Link from 'next/link';
+import Link from 'next/link'
+import { ArrowRight, Zap, Shield, Gauge } from 'lucide-react'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-gradient-to-br from-neutral-50 via-white to-neutral-50 dark:from-neutral-900 dark:via-neutral-800 dark:to-neutral-900">
+    <div className="w-full min-h-screen">
       {/* 导航栏 */}
-      <nav className="sticky top-0 z-40 border-b border-neutral-200 dark:border-neutral-700 bg-white/80 dark:bg-neutral-800/80 backdrop-blur-md">
-        <Container>
-          <div className="h-16 flex items-center justify-between">
-            <div className="text-2xl font-bold bg-gradient-to-r from-primary-500 to-blue-500 bg-clip-text text-transparent">
-              Oblivious
-            </div>
-            <div className="hidden md:flex items-center gap-8">
-              <a href="#features" className="text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition">
-                Features
-              </a>
-              <a href="#pricing" className="text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition">
-                Pricing
-              </a>
-              <a href="#docs" className="text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition">
-                Docs
-              </a>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link href="/login">
-                <Button variant="ghost" size="sm">
-                  Login
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button size="sm">
-                  Start Free
-                </Button>
-              </Link>
-            </div>
+      <nav className="sticky top-0 z-50 bg-white dark:bg-dark-900 border-b border-gray-200 dark:border-dark-700">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Zap className="w-6 h-6 text-primary-600" />
+            <span className="text-xl font-bold text-gray-900 dark:text-white">Oblivious AI</span>
           </div>
-        </Container>
+          <div className="flex items-center gap-4">
+            <Link href="/chat" className="btn btn-primary">
+              开始使用
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Link>
+          </div>
+        </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="py-20 md:py-32">
-        <Container>
-          <VStack spacing="lg" className="text-center">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary-200 bg-primary-50 dark:bg-primary-900/30 dark:border-primary-800">
-              <span className="w-2 h-2 rounded-full bg-primary-500 animate-pulse" />
-              <span className="text-sm font-medium text-primary-600 dark:text-primary-400">
-                Now in Beta
-              </span>
-            </div>
-
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tight">
-              <span className="bg-gradient-to-r from-primary-600 via-blue-600 to-cyan-600 bg-clip-text text-transparent">
-                AI Platform
-              </span>
-              <br />
-              <span className="text-neutral-900 dark:text-white">
-                Built for Everyone
-              </span>
-            </h1>
-
-            <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl">
-              Access any AI model from a single unified interface. Fast, reliable, and powerful. 
-              Perfect for developers, businesses, and enterprises.
-            </p>
-
-            <HStack spacing="md" className="justify-center flex-wrap">
-              <Link href="/chat">
-                <Button size="lg" className="gap-2">
-                  Start Chatting
-                  <ArrowRight size={20} />
-                </Button>
-              </Link>
-              <Link href="/register">
-                <Button variant="outline" size="lg">
-                  View Demo
-                </Button>
-              </Link>
-            </HStack>
-
-            <div className="mt-8 pt-8 border-t border-neutral-200 dark:border-neutral-700">
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
-                Trusted by thousands of users worldwide
-              </p>
-              <div className="flex items-center justify-center gap-8">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-neutral-900 dark:text-white">1M+</div>
-                  <div className="text-xs text-neutral-500">API Calls</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-neutral-900 dark:text-white">50K+</div>
-                  <div className="text-xs text-neutral-500">Active Users</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-neutral-900 dark:text-white">99.9%</div>
-                  <div className="text-xs text-neutral-500">Uptime</div>
-                </div>
-              </div>
-            </div>
-          </VStack>
-        </Container>
-      </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-20 md:py-32 border-t border-neutral-200 dark:border-neutral-700">
-        <Container>
-          <VStack spacing="xl">
-            <div className="text-center">
-              <h2 className="text-4xl md:text-5xl font-bold mb-4 text-neutral-900 dark:text-white">
-                Powerful Features
-              </h2>
-              <p className="text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-                Everything you need to build amazing AI applications
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-8 mt-12">
-              {/* Feature 1 */}
-              <div className="p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 hover:border-primary-200 dark:hover:border-primary-800 transition group">
-                <div className="mb-4 inline-flex p-3 rounded-lg bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-800 transition">
-                  <Zap className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-neutral-900 dark:text-white">
-                  Ultra Fast
-                </h3>
-                <p className="text-neutral-600 dark:text-neutral-400">
-                  Lightning-fast API responses with optimized infrastructure
-                </p>
-              </div>
-
-              {/* Feature 2 */}
-              <div className="p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 hover:border-primary-200 dark:hover:border-primary-800 transition group">
-                <div className="mb-4 inline-flex p-3 rounded-lg bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-800 transition">
-                  <MessageSquare className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-neutral-900 dark:text-white">
-                  Multiple Models
-                </h3>
-                <p className="text-neutral-600 dark:text-neutral-400">
-                  Access GPT-4, Claude, Gemini and more from one interface
-                </p>
-              </div>
-
-              {/* Feature 3 */}
-              <div className="p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 hover:border-primary-200 dark:hover:border-primary-800 transition group">
-                <div className="mb-4 inline-flex p-3 rounded-lg bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-800 transition">
-                  <Shield className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-neutral-900 dark:text-white">
-                  Secure & Private
-                </h3>
-                <p className="text-neutral-600 dark:text-neutral-400">
-                  Enterprise-grade security with end-to-end encryption
-                </p>
-              </div>
-
-              {/* Feature 4 */}
-              <div className="p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 hover:border-primary-200 dark:hover:border-primary-800 transition group">
-                <div className="mb-4 inline-flex p-3 rounded-lg bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-800 transition">
-                  <Cpu className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-neutral-900 dark:text-white">
-                  Powerful API
-                </h3>
-                <p className="text-neutral-600 dark:text-neutral-400">
-                  Simple yet powerful API for developers
-                </p>
-              </div>
-
-              {/* Feature 5 */}
-              <div className="p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 hover:border-primary-200 dark:hover:border-primary-800 transition group">
-                <div className="mb-4 inline-flex p-3 rounded-lg bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-800 transition">
-                  <Globe className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-neutral-900 dark:text-white">
-                  Global Scale
-                </h3>
-                <p className="text-neutral-600 dark:text-neutral-400">
-                  Deployed worldwide with low latency everywhere
-                </p>
-              </div>
-
-              {/* Feature 6 */}
-              <div className="p-6 rounded-2xl border border-neutral-200 dark:border-neutral-700 hover:border-primary-200 dark:hover:border-primary-800 transition group">
-                <div className="mb-4 inline-flex p-3 rounded-lg bg-primary-100 dark:bg-primary-900/30 group-hover:bg-primary-200 dark:group-hover:bg-primary-800 transition">
-                  <Zap className="w-6 h-6 text-primary-600 dark:text-primary-400" />
-                </div>
-                <h3 className="text-xl font-semibold mb-2 text-neutral-900 dark:text-white">
-                  Real-time Updates
-                </h3>
-                <p className="text-neutral-600 dark:text-neutral-400">
-                  Live streaming responses and real-time collaboration
-                </p>
-              </div>
-            </div>
-          </VStack>
-        </Container>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-20 md:py-32 border-t border-neutral-200 dark:border-neutral-700">
-        <Container>
-          <div className="bg-gradient-to-r from-primary-600 to-blue-600 rounded-3xl p-12 md:p-20 text-center text-white">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Ready to Get Started?
-            </h2>
-            <p className="text-xl mb-8 text-blue-100 max-w-2xl mx-auto">
-              Join thousands of developers using Oblivious to power their AI applications
-            </p>
-            <HStack spacing="md" className="justify-center flex-wrap">
-              <Link href="/register">
-                <Button size="lg" className="bg-white text-primary-600 hover:bg-neutral-100">
-                  Start Free Trial
-                </Button>
-              </Link>
-              <Link href="#docs">
-                <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
-                  View Documentation
-                </Button>
-              </Link>
-            </HStack>
+      {/* 主要内容 */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* 英雄部分 */}
+        <section className="text-center py-12 md:py-20">
+          <h1 className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
+            企业级 AI API 中转平台
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+            支持多个 AI 模型提供商的统一接入、完整管理系统和企业级功能
+          </p>
+          <div className="flex justify-center gap-4">
+            <Link href="/chat" className="btn btn-primary px-8 py-3 text-lg">
+              进入对话
+            </Link>
+            <Link href="/console" className="btn btn-secondary px-8 py-3 text-lg">
+              开发者控制台
+            </Link>
           </div>
-        </Container>
-      </section>
+        </section>
 
-      {/* Footer */}
-      <footer className="border-t border-neutral-200 dark:border-neutral-700 py-12">
-        <Container>
-          <div className="grid md:grid-cols-4 gap-8 mb-8">
+        {/* 特性部分 */}
+        <section className="grid grid-cols-1 md:grid-cols-3 gap-8 py-16">
+          <FeatureCard
+            icon={<Zap className="w-8 h-8" />}
+            title="多模型支持"
+            description="支持 OpenAI、Claude、Gemini 等多个 AI 提供商的统一接入"
+          />
+          <FeatureCard
+            icon={<Shield className="w-8 h-8" />}
+            title="企业级安全"
+            description="API 密钥管理、权限控制、访问审计等完整的安全体系"
+          />
+          <FeatureCard
+            icon={<Gauge className="w-8 h-8" />}
+            title="完整管理系统"
+            description="实时统计、使用分析、限流配额、成本账单等管理功能"
+          />
+        </section>
+
+        {/* CTA 部分 */}
+        <section className="bg-gradient-primary rounded-lg p-12 text-center text-white my-16">
+          <h2 className="text-3xl font-bold mb-4">准备好开始了吗？</h2>
+          <p className="text-lg opacity-90 mb-8">
+            立即注册使用 Oblivious AI，体验企业级 AI API 中转服务
+          </p>
+          <Link href="/chat" className="inline-flex items-center gap-2 bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors">
+            立即开始
+            <ArrowRight className="w-5 h-5" />
+          </Link>
+        </section>
+      </main>
+
+      {/* 页脚 */}
+      <footer className="bg-gray-50 dark:bg-dark-950 border-t border-gray-200 dark:border-dark-700 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
-              <h4 className="font-semibold text-neutral-900 dark:text-white mb-4">Product</h4>
-              <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">Features</a></li>
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">Pricing</a></li>
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">API</a></li>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">产品</h3>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li><a href="#" className="hover:text-primary-600">对话</a></li>
+                <li><a href="#" className="hover:text-primary-600">知识库</a></li>
+                <li><a href="#" className="hover:text-primary-600">插件</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-neutral-900 dark:text-white mb-4">Resources</h4>
-              <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">Documentation</a></li>
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">Blog</a></li>
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">Community</a></li>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">开发者</h3>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li><a href="#" className="hover:text-primary-600">API 文档</a></li>
+                <li><a href="#" className="hover:text-primary-600">部署指南</a></li>
+                <li><a href="#" className="hover:text-primary-600">示例代码</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-neutral-900 dark:text-white mb-4">Company</h4>
-              <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">About</a></li>
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">Contact</a></li>
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">Careers</a></li>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">资源</h3>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li><a href="#" className="hover:text-primary-600">博客</a></li>
+                <li><a href="#" className="hover:text-primary-600">常见问题</a></li>
+                <li><a href="#" className="hover:text-primary-600">联系我们</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold text-neutral-900 dark:text-white mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">Privacy</a></li>
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">Terms</a></li>
-                <li><a href="#" className="hover:text-neutral-900 dark:hover:text-white transition">Security</a></li>
+              <h3 className="font-semibold text-gray-900 dark:text-white mb-4">法律</h3>
+              <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+                <li><a href="#" className="hover:text-primary-600">服务条款</a></li>
+                <li><a href="#" className="hover:text-primary-600">隐私政策</a></li>
+                <li><a href="#" className="hover:text-primary-600">安全政策</a></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-neutral-200 dark:border-neutral-700 pt-8 flex items-center justify-between">
-            <p className="text-sm text-neutral-600 dark:text-neutral-400">
-              © 2024 Oblivious. All rights reserved.
-            </p>
-            <div className="flex items-center gap-4">
-              <a href="#" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition">Twitter</a>
-              <a href="#" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition">GitHub</a>
-              <a href="#" className="text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white transition">Discord</a>
-            </div>
+          <div className="border-t border-gray-200 dark:border-dark-700 pt-8 flex justify-between items-center text-sm text-gray-600 dark:text-gray-400">
+            <p>&copy; 2024 Oblivious AI. 保留所有权利。</p>
+            <p>Made with ❤️ for developers</p>
           </div>
-        </Container>
+        </div>
       </footer>
-    </main>
-  );
+    </div>
+  )
+}
+
+function FeatureCard({ icon, title, description }: {
+  icon: React.ReactNode
+  title: string
+  description: string
+}) {
+  return (
+    <div className="card card-lg">
+      <div className="text-primary-600 mb-4">
+        {icon}
+      </div>
+      <h3 className="text-lg-title mb-2">{title}</h3>
+      <p className="text-sm-gray">{description}</p>
+    </div>
+  )
 }
