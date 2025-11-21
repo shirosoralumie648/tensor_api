@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS quota_logs CASCADE;
+
+

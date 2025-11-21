@@ -1,0 +1,42 @@
+# 多阶段构建 - Next.js 前端
+
+# Stage 1: 依赖安装和构建
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# 复制 package.json 和 package-lock.json
+COPY frontend/package*.json ./
+
+# 安装依赖
+RUN npm install
+
+# 复制源代码
+COPY frontend/ .
+
+# 构建
+RUN npm run build
+
+# Stage 2: 运行镜像
+FROM node:20-alpine
+
+WORKDIR /app
+
+# 只复制必要的文件
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
+# 安装生产依赖
+RUN npm install --only=production
+
+# 暴露端口
+EXPOSE 3000
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000/health', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
+
+# 启动应用
+CMD ["npm", "start"]
+

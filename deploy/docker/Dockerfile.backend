@@ -1,0 +1,55 @@
+# 多阶段构建 - Go 后端服务
+
+# Stage 1: 编译
+FROM golang:1.24.10-alpine AS builder
+
+WORKDIR /build
+
+# 安装依赖
+RUN apk add --no-cache git make ca-certificates
+
+# 复制 go.mod 和 go.sum
+COPY backend/go.mod backend/go.sum ./
+
+# 下载依赖
+RUN go mod download
+
+# 复制源代码
+COPY backend/ .
+
+# 编译所有服务
+RUN mkdir -p bin && \
+    CGO_ENABLED=0 go build -o bin/gateway ./cmd/gateway && \
+    CGO_ENABLED=0 go build -o bin/user ./cmd/user && \
+    CGO_ENABLED=0 go build -o bin/chat ./cmd/chat && \
+    CGO_ENABLED=0 go build -o bin/relay ./cmd/relay && \
+    CGO_ENABLED=0 go build -o bin/agent ./cmd/agent && \
+    CGO_ENABLED=0 go build -o bin/kb ./cmd/kb
+
+# Stage 2: 运行镜像
+FROM alpine:latest
+
+WORKDIR /app
+
+# 安装运行时依赖
+RUN apk add --no-cache ca-certificates tzdata postgresql-client
+
+# 从编译阶段复制二进制文件
+COPY --from=builder /build/bin/ /app/bin/
+
+# 复制迁移文件
+COPY backend/migrations /app/migrations
+
+# 复制脚本
+COPY backend/scripts /app/scripts
+
+# 暴露所有服务端口
+EXPOSE 8080 8081 8082 8083 8084 8085
+
+# 健康检查
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+
+# 默认命令
+CMD ["/app/bin/gateway"]
+

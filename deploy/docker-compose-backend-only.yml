@@ -1,0 +1,150 @@
+services:
+  # PostgreSQL 数据库
+  postgres:
+    image: postgres:16-alpine
+    container_name: oblivious-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
+      POSTGRES_DB: ${DB_NAME:-oblivious}
+    ports:
+      - "${DB_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - oblivious-network
+
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: oblivious-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - oblivious-network
+
+  # API 网关
+  gateway:
+    image: oblivious-backend:latest
+    container_name: oblivious-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      APP_PORT: "8080"
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DB_USER:-postgres}
+      DATABASE_PASSWORD: ${DB_PASSWORD:-password}
+      DATABASE_NAME: ${DB_NAME:-oblivious}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+      USER_SERVICE_URL: http://user:8081
+      CHAT_SERVICE_URL: http://chat:8082
+      RELAY_SERVICE_URL: http://relay:8083
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - oblivious-network
+
+  # 用户服务
+  user:
+    image: oblivious-backend:latest
+    container_name: oblivious-user
+    ports:
+      - "8081:8081"
+    environment:
+      APP_PORT: "8081"
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DB_USER:-postgres}
+      DATABASE_PASSWORD: ${DB_PASSWORD:-password}
+      DATABASE_NAME: ${DB_NAME:-oblivious}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - oblivious-network
+    command: /app/bin/user
+
+  # 对话服务
+  chat:
+    image: oblivious-backend:latest
+    container_name: oblivious-chat
+    ports:
+      - "8082:8082"
+    environment:
+      APP_PORT: "8082"
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DB_USER:-postgres}
+      DATABASE_PASSWORD: ${DB_PASSWORD:-password}
+      DATABASE_NAME: ${DB_NAME:-oblivious}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - oblivious-network
+    command: /app/bin/chat
+
+  # 中转服务
+  relay:
+    image: oblivious-backend:latest
+    container_name: oblivious-relay
+    ports:
+      - "8083:8083"
+    environment:
+      APP_PORT: "8083"
+      APP_ENV: ${APP_ENV:-development}
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${DB_USER:-postgres}
+      DATABASE_PASSWORD: ${DB_PASSWORD:-password}
+      DATABASE_NAME: ${DB_NAME:-oblivious}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - oblivious-network
+    command: /app/bin/relay
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  oblivious-network:
+    driver: bridge
+
