@@ -10,7 +10,7 @@ import (
 	"github.com/shirosoralumie648/Oblivious/backend/internal/middleware"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/service"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/utils"
-	"github.com/shirosoralumie648/Oblivious/backend/pkg/logger"
+	logger "github.com/shirosoralumie648/Oblivious/backend/internal/logging"
 	"go.uber.org/zap"
 )
 

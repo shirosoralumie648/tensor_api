@@ -26,13 +26,12 @@ func main() {
 	}
 
 	// 初始化数据库
-	db, err := database.NewPostgresDB(&cfg.Database)
-	if err != nil {
+	if err := database.InitPostgres(&cfg.Database, cfg.App.Env); err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 
 	// 创建服务
-	billingService := service.NewBillingService()
+	billingService := service.NewAdvancedBillingService(database.DB)
 
 	// 创建处理器
 	billingHandler := handler.NewBillingHandler(billingService)
@@ -79,9 +78,9 @@ func main() {
 	}
 
 	// 启动服务器
-	port := cfg.Services.Billing.Port
-	if port == 0 {
-		port = 8084
+	port := 8084
+	if p := os.Getenv("BILLING_PORT"); p != "" {
+		fmt.Sscanf(p, "%d", &port)
 	}
 
 	srv := &http.Server{

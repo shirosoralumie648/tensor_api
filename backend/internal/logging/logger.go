@@ -11,23 +11,23 @@ import (
 
 // LogEntry 日志条目
 type LogEntry struct {
-	Timestamp   time.Time              `json:"timestamp"`
-	Level       string                 `json:"level"`
-	Message     string                 `json:"message"`
-	RequestID   string                 `json:"request_id,omitempty"`
-	UserID      string                 `json:"user_id,omitempty"`
-	Service     string                 `json:"service,omitempty"`
-	Method      string                 `json:"method,omitempty"`
-	Path        string                 `json:"path,omitempty"`
-	StatusCode  int                    `json:"status_code,omitempty"`
-	Duration    float64                `json:"duration_ms,omitempty"`
-	Error       string                 `json:"error,omitempty"`
-	ErrorType   string                 `json:"error_type,omitempty"`
-	StackTrace  string                 `json:"stack_trace,omitempty"`
-	Fields      map[string]interface{} `json:"fields,omitempty"`
-	TraceID     string                 `json:"trace_id,omitempty"`
-	SpanID      string                 `json:"span_id,omitempty"`
-	Tags        []string               `json:"tags,omitempty"`
+	Timestamp  time.Time              `json:"timestamp"`
+	Level      string                 `json:"level"`
+	Message    string                 `json:"message"`
+	RequestID  string                 `json:"request_id,omitempty"`
+	UserID     string                 `json:"user_id,omitempty"`
+	Service    string                 `json:"service,omitempty"`
+	Method     string                 `json:"method,omitempty"`
+	Path       string                 `json:"path,omitempty"`
+	StatusCode int                    `json:"status_code,omitempty"`
+	Duration   float64                `json:"duration_ms,omitempty"`
+	Error      string                 `json:"error,omitempty"`
+	ErrorType  string                 `json:"error_type,omitempty"`
+	StackTrace string                 `json:"stack_trace,omitempty"`
+	Fields     map[string]interface{} `json:"fields,omitempty"`
+	TraceID    string                 `json:"trace_id,omitempty"`
+	SpanID     string                 `json:"span_id,omitempty"`
+	Tags       []string               `json:"tags,omitempty"`
 }
 
 // Logger 结构化日志记录器
@@ -157,7 +157,7 @@ func (l *Logger) ErrorLog(msg string, err error, errorType string, fields map[st
 // PerformanceLog 记录性能日志
 func (l *Logger) PerformanceLog(operation string, duration time.Duration, fields map[string]interface{}) {
 	allFields := map[string]interface{}{
-		"operation":  operation,
+		"operation":   operation,
 		"duration_ms": duration.Milliseconds(),
 	}
 
@@ -215,3 +215,56 @@ func mapToZapFields(fields map[string]interface{}) []zapcore.Field {
 	return zapFields
 }
 
+// ==================== 全局兼容层 ====================
+
+var DefaultLogger *Logger
+
+// Init 初始化全局 Logger (兼容旧 API)
+func Init(env string) error {
+	var err error
+	development := env == "development"
+	DefaultLogger, err = NewLogger(development)
+	return err
+}
+
+// Sync 同步日志 (兼容旧 API)
+func Sync() {
+	if DefaultLogger != nil {
+		_ = DefaultLogger.Close()
+	}
+}
+
+// Info 记录信息日志 (全局)
+func Info(msg string, fields ...zapcore.Field) {
+	if DefaultLogger != nil {
+		DefaultLogger.logger.Info(msg, fields...)
+	}
+}
+
+// Warn 记录警告日志 (全局)
+func Warn(msg string, fields ...zapcore.Field) {
+	if DefaultLogger != nil {
+		DefaultLogger.logger.Warn(msg, fields...)
+	}
+}
+
+// Error 记录错误日志 (全局)
+func Error(msg string, fields ...zapcore.Field) {
+	if DefaultLogger != nil {
+		DefaultLogger.logger.Error(msg, fields...)
+	}
+}
+
+// Fatal 记录致命错误日志 (全局)
+func Fatal(msg string, fields ...zapcore.Field) {
+	if DefaultLogger != nil {
+		DefaultLogger.logger.Fatal(msg, fields...)
+	}
+}
+
+// Debug 记录调试日志 (全局)
+func Debug(msg string, fields ...zapcore.Field) {
+	if DefaultLogger != nil {
+		DefaultLogger.logger.Debug(msg, fields...)
+	}
+}

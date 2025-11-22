@@ -6,7 +6,7 @@ import (
 
 	"github.com/shirosoralumie648/Oblivious/backend/internal/database"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
-	"github.com/shirosoralumie648/Oblivious/backend/pkg/logger"
+	logger "github.com/shirosoralumie648/Oblivious/backend/internal/logging"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
