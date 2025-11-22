@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 )
 
@@ -69,17 +70,23 @@ func (oa *OpenAIAdapter) ParseStreamResponse(resp *http.Response) (<-chan *Strea
 		defer close(ch)
 		defer resp.Body.Close()
 
-		scanner := bufio.NewScanner(resp.Body)
-		for scanner.Scan() {
-			line := scanner.Bytes()
+		reader := bufio.NewReader(resp.Body)
+		for {
+			line, err := reader.ReadString('\n')
+			if err != nil {
+				if err != io.EOF {
+					// ignore errors, stream will end
+				}
+				return
+			}
 
-			if !bytes.HasPrefix(line, []byte("data: ")) {
+			if !bytes.HasPrefix([]byte(line), []byte("data: ")) {
 				continue
 			}
 
-			data := bytes.TrimPrefix(line, []byte("data: "))
+			data := bytes.TrimSpace(bytes.TrimPrefix([]byte(line), []byte("data: ")))
 			if bytes.Equal(data, []byte("[DONE]")) {
-				break
+				return
 			}
 
 			var chunk StreamChunk

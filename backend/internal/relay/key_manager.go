@@ -2,6 +2,7 @@ package relay
 
 import (
 	"fmt"
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -453,12 +454,18 @@ func (kp *KeyPool) GetAllStatistics() map[string]map[string]interface{} {
 
 // 辅助函数
 func randInt(n int) int {
-	return int(atomic.AddInt64(&globalRandSeed, 1)) % n
+	rngMu.Lock()
+	defer rngMu.Unlock()
+	return rng.Intn(n)
 }
 
 func randFloat() float64 {
-	return float64(atomic.AddInt64(&globalRandSeed, 1)) / float64(1<<63 - 1)
+	rngMu.Lock()
+	defer rngMu.Unlock()
+	return rng.Float64()
 }
 
-var globalRandSeed int64 = int64(time.Now().UnixNano())
-
+var (
+	rng   = rand.New(rand.NewSource(time.Now().UnixNano()))
+	rngMu sync.Mutex
+)

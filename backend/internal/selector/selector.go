@@ -108,6 +108,10 @@ func (s *DefaultChannelSelector) SelectWithRetry(ctx context.Context, req *Selec
 		if err != nil {
 			lastErr = err
 			failedCount++
+			// 将失败的渠道加入排除列表，避免重复尝试同一渠道
+			if result != nil && result.Channel != nil {
+				excludeIDs = append(excludeIDs, result.Channel.ID)
+			}
 			continue
 		}
 

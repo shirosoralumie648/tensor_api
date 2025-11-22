@@ -1,6 +1,7 @@
 package relay
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -133,19 +134,24 @@ func (rc *RequestClient) DoRequest(
 ) ([]byte, http.Header, error) {
 	var lastChannel *Channel
 	var lastErr error
+	var respBody []byte
+	var respHeader http.Header
 
-	// 使用重试机制
+	// 缓存请求体以便重试
+	bodyBytes, errRead := io.ReadAll(body)
+	if errRead != nil {
+		return nil, nil, errRead
+	}
+
 	_, err := RetryWithCallback(
 		ctx,
 		rc.retryPolicy,
 		func(ctx context.Context, retryCtx *RetryContext) error {
-			// 选择渠道
 			var channel *Channel
 			if retryCtx.RetryCount == 0 {
 				channel = rc.SelectChannel("")
 				lastChannel = channel
 			} else {
-				// 重试时切换渠道
 				channel = rc.SwitchChannel(lastChannel)
 				lastChannel = channel
 			}
@@ -154,23 +160,14 @@ func (rc *RequestClient) DoRequest(
 				return fmt.Errorf("no available channel")
 			}
 
-			// 发送请求
-			_, _, err := rc.doSingleRequest(ctx, channel, method, path, body, headers)
+			respBody, respHeader, err = rc.doSingleRequest(ctx, channel, method, path, bytes.NewReader(bodyBytes), headers)
 			if err != nil {
-				// 包装为可重试错误
-				retryErr := &RetryableError{
+				lastErr = err
+				return &RetryableError{
 					StatusCode: 0,
 					Message:    err.Error(),
 					Err:        err,
 				}
-				lastErr = retryErr
-				return retryErr
-			}
-
-			// 成功返回
-			*retryCtx = RetryContext{
-				RetryCount: retryCtx.RetryCount,
-				Delay:      retryCtx.Delay,
 			}
 
 			return nil
@@ -183,7 +180,7 @@ func (rc *RequestClient) DoRequest(
 	}
 
 	atomic.AddInt64(&rc.successRequests, 1)
-	return nil, nil, nil // 这里应该返回实际的响应数据
+	return respBody, respHeader, nil
 }
 
 // doSingleRequest 发送单个请求（不带重试）

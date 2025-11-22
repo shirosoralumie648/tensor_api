@@ -2,7 +2,6 @@ package chat
 
 import (
 	"testing"
-	"time"
 )
 
 func TestSystemPromptManagerAddPrompt(t *testing.T) {
@@ -429,4 +428,3 @@ func BenchmarkAgentCreation(b *testing.B) {
 		_ = NewAgent("agent-"+string(rune(i)), "Test", prompt)
 	}
 }
-

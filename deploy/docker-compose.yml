@@ -19,6 +19,47 @@ services:
     networks:
       - oblivious-network
 
+  # RabbitMQ 消息队列
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: oblivious-rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - oblivious-network
+
+  # MinIO 对象存储
+  minio:
+    image: minio/minio:RELEASE.2024-09-22T00-00-00Z
+    container_name: oblivious-minio
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    command: server /data --console-address ":9001"
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - oblivious-network
+
   # Redis 缓存
   redis:
     image: redis:7-alpine
@@ -55,11 +96,21 @@ services:
       USER_SERVICE_URL: http://user:8081
       CHAT_SERVICE_URL: http://chat:8082
       RELAY_SERVICE_URL: http://relay:8083
+      RABBITMQ_URL: amqp://rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-oblivious}
+      MINIO_USE_SSL: "false"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      minio:
+        condition: service_started
     networks:
       - oblivious-network
 
@@ -80,11 +131,21 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
+      RABBITMQ_URL: amqp://rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-oblivious}
+      MINIO_USE_SSL: "false"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      minio:
+        condition: service_started
     networks:
       - oblivious-network
     command: /app/bin/user
@@ -131,11 +192,21 @@ services:
       DATABASE_NAME: ${DB_NAME:-oblivious}
       REDIS_HOST: redis
       REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-oblivious}
+      MINIO_USE_SSL: "false"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      minio:
+        condition: service_started
     networks:
       - oblivious-network
     command: /app/bin/relay
@@ -184,11 +255,21 @@ services:
       REDIS_PORT: 6379
       JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key}
       EMBEDDING_API_URL: http://relay:8083/v1/embeddings
+      RABBITMQ_URL: amqp://rabbitmq:5672/
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      MINIO_BUCKET: ${MINIO_BUCKET:-oblivious}
+      MINIO_USE_SSL: "false"
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+      rabbitmq:
+        condition: service_started
+      minio:
+        condition: service_started
     networks:
       - oblivious-network
     command: /app/bin/kb
@@ -209,6 +290,8 @@ services:
 volumes:
   postgres_data:
   redis_data:
+  rabbitmq_data:
+  minio_data:
 
 networks:
   oblivious-network:

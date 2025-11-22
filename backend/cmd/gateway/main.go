@@ -1,19 +1,19 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/config"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/database"
+	logger "github.com/shirosoralumie648/Oblivious/backend/internal/logging"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/middleware"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/utils"
-	logger "github.com/shirosoralumie648/Oblivious/backend/internal/logging"
 	"go.uber.org/zap"
 )
 
@@ -121,21 +121,13 @@ func main() {
 // proxyToService 代理请求到目标服务
 func proxyToService(targetURL string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 读取请求体
-		body, err := io.ReadAll(c.Request.Body)
+		target, err := joinURL(targetURL, c.Request.URL.Path, c.Request.URL.RawQuery)
 		if err != nil {
-			utils.InternalError(c, "读取请求失败")
+			utils.InternalError(c, "创建请求失败")
 			return
 		}
 
-		// 构建目标 URL
-		target := targetURL + c.Request.URL.Path
-		if c.Request.URL.RawQuery != "" {
-			target += "?" + c.Request.URL.RawQuery
-		}
-
-		// 创建新请求
-		req, err := http.NewRequest(c.Request.Method, target, bytes.NewReader(body))
+		req, err := http.NewRequestWithContext(c.Request.Context(), c.Request.Method, target, c.Request.Body)
 		if err != nil {
 			utils.InternalError(c, "创建请求失败")
 			return
@@ -155,7 +147,6 @@ func proxyToService(targetURL string) gin.HandlerFunc {
 			req.Header.Set("X-User-Role", fmt.Sprintf("%d", c.GetInt("role")))
 		}
 
-		// 发送请求
 		client := &http.Client{Timeout: 30 * time.Second}
 		resp, err := client.Do(req)
 		if err != nil {
@@ -164,64 +155,47 @@ func proxyToService(targetURL string) gin.HandlerFunc {
 		}
 		defer resp.Body.Close()
 
-		// 读取响应
-		respBody, err := io.ReadAll(resp.Body)
-		if err != nil {
-			utils.InternalError(c, "读取响应失败")
-			return
-		}
-
-		// 复制响应 Header
 		for key, values := range resp.Header {
 			for _, value := range values {
-				c.Header(key, value)
+				c.Header(key, value)WORK_PLAN.md，包含从环境搭建、后端组件、Relay/适配器、计费与异步任务、知识库、Token
 			}
 		}
 
-		// 返回响应
-		c.Data(resp.StatusCode, resp.Header.Get("Content-Type"), respBody)
+		c.Status(resp.StatusCode)
+		if _, err := io.Copy(c.Writer, resp.Body); err != nil {
+			logger.Error("Failed to copy response", zap.Error(err))
+		}
 	}
 }
 
 // proxyToServiceSSE 代理 SSE 流式请求到目标服务
 func proxyToServiceSSE(targetURL string) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 读取请求体
-		body, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			utils.InternalError(c, "读取请求失败")
-			return
-		}
-
-		// 构建目标 URL
-		target := targetURL + c.Request.URL.Path
-		if c.Request.URL.RawQuery != "" {
-			target += "?" + c.Request.URL.RawQuery
-		}
-
-		// 创建新请求
-		req, err := http.NewRequest(c.Request.Method, target, bytes.NewReader(body))
+		target, err := joinURL(targetURL, c.Request.URL.Path, c.Request.URL.RawQuery)
 		if err != nil {
 			utils.InternalError(c, "创建请求失败")
 			return
 		}
 
-		// 复制 Header
+		req, err := http.NewRequestWithContext(c.Request.Context(), c.Request.Method, target, c.Request.Body)
+		if err != nil {
+			utils.InternalError(c, "创建请求失败")
+			return
+		}
+
 		for key, values := range c.Request.Header {
 			for _, value := range values {
 				req.Header.Add(key, value)
 			}
 		}
 
-		// 传递用户信息（如果已鉴权）
 		if userID, exists := c.Get("user_id"); exists {
 			req.Header.Set("X-User-ID", fmt.Sprintf("%d", userID))
 			req.Header.Set("X-Username", c.GetString("username"))
 			req.Header.Set("X-User-Role", fmt.Sprintf("%d", c.GetInt("role")))
 		}
 
-		// 发送请求
-		client := &http.Client{Timeout: 300 * time.Second} // SSE 需要更长的超时时间
+		client := &http.Client{Timeout: 300 * time.Second}
 		resp, err := client.Do(req)
 		if err != nil {
 			utils.InternalError(c, "请求上游服务失败")
@@ -229,28 +203,34 @@ func proxyToServiceSSE(targetURL string) gin.HandlerFunc {
 		}
 		defer resp.Body.Close()
 
-		// 设置 SSE 响应头
 		c.Header("Content-Type", "text/event-stream")
 		c.Header("Cache-Control", "no-cache")
 		c.Header("Connection", "keep-alive")
 		c.Header("Access-Control-Allow-Origin", "*")
-		c.Header("Transfer-Encoding", "chunked")
 
-		// 复制其他响应 Header（除了 Content-Length）
 		for key, values := range resp.Header {
-			if key != "Content-Length" {
-				for _, value := range values {
-					c.Header(key, value)
-				}
+			if key == "Content-Length" {
+				continue
+			}
+			for _, value := range values {
+				c.Header(key, value)
 			}
 		}
 
-		// 流式转发响应
 		c.Status(resp.StatusCode)
-		_, err = io.Copy(c.Writer, resp.Body)
-		if err != nil {
+		if _, err := io.Copy(c.Writer, resp.Body); err != nil {
 			logger.Error("Failed to copy SSE response", zap.Error(err))
-			return
 		}
 	}
+}
+
+// joinURL 组装目标 URL
+func joinURL(base, path, rawQuery string) (string, error) {
+	u, err := url.Parse(base)
+	if err != nil {
+		return "", err
+	}
+	u.Path = path
+	u.RawQuery = rawQuery
+	return u.String(), nil
 }
