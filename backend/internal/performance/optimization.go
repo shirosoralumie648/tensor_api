@@ -70,11 +70,7 @@ func (po *PerformanceOptimizer) OptimizeMemory() {
 	runtime.GC()
 
 	// 释放内存
-	debug := runtime.DebugInfo()
-	if len(debug) > 0 {
-		// 强制进行一次垃圾回收
-		runtime.GC()
-	}
+	debug.FreeOSMemory()
 }
 
 // CheckMemoryUsage 检查内存使用
