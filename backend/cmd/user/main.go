@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/config"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/database"
+	logger "github.com/shirosoralumie648/Oblivious/backend/internal/logging"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/middleware"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/service"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/utils"
-	logger "github.com/shirosoralumie648/Oblivious/backend/internal/logging"
 	"go.uber.org/zap"
 )
 
@@ -106,12 +106,12 @@ func main() {
 		})
 	}
 
-	// 需要鉴权的接口
-	protected := api.Group("")
-	protected.Use(middleware.AuthMiddleware())
+	// 鉴权中间件
+	auth := r.Group("/api/v1")
+	auth.Use(middleware.AuthMiddleware([]byte(cfg.JWT.Secret)))
 	{
-		// 获取当前用户信息
-		protected.GET("/user/profile", func(c *gin.Context) {
+		// 用户信息获取当前用户信息
+		auth.GET("/user/profile", func(c *gin.Context) {
 			userID := c.GetInt("user_id")
 
 			user, err := userService.GetUserByID(c.Request.Context(), userID)
@@ -129,7 +129,7 @@ func main() {
 		})
 
 		// 更新用户资料
-		protected.PUT("/user/profile", func(c *gin.Context) {
+		auth.PUT("/user/profile", func(c *gin.Context) {
 			userID := c.GetInt("user_id")
 
 			var req service.UpdateProfileRequest
@@ -148,7 +148,7 @@ func main() {
 		})
 
 		// 根据 ID 获取用户信息（管理员功能）
-		protected.GET("/user/:id", func(c *gin.Context) {
+		auth.GET("/user/:id", func(c *gin.Context) {
 			// TODO: 添加管理员权限检查
 			user, err := userService.GetUserByID(c.Request.Context(), 1) // 临时写死
 			if err != nil {

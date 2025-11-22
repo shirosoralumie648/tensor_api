@@ -192,8 +192,6 @@ func (aa *AnalyticsAPI) GetErrorStats(userID string, startTime, endTime time.Tim
 // GetQuotaStatus 获取配额状态
 func (aa *AnalyticsAPI) GetQuotaStatus(userID string, dailyQuota, monthlyQuota int64) (map[string]interface{}, error) {
 	now := time.Now()
-	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
-	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
 
 	// 获取今日统计
 	dailyStats, err := aa.logger.GetDailyStats(userID, now)

@@ -9,10 +9,10 @@ import (
 	"github.com/google/uuid"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/config"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/database"
+	logger "github.com/shirosoralumie648/Oblivious/backend/internal/logging"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/middleware"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/service"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/utils"
-	logger "github.com/shirosoralumie648/Oblivious/backend/internal/logging"
 	"go.uber.org/zap"
 )
 
@@ -55,7 +55,7 @@ func main() {
 
 	// 注册路由 - 所有接口都需要鉴权
 	api := r.Group("/api/v1")
-	api.Use(middleware.AuthMiddleware())
+	api.Use(middleware.AuthMiddleware([]byte(cfg.JWT.Secret)))
 	{
 		// 创建会话
 		api.POST("/chat/sessions", func(c *gin.Context) {

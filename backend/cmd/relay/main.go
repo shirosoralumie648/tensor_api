@@ -9,11 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/config"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/database"
+	logger "github.com/shirosoralumie648/Oblivious/backend/internal/logging"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/middleware"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/relay"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/service"
 	"github.com/shirosoralumie648/Oblivious/backend/internal/utils"
-	logger "github.com/shirosoralumie648/Oblivious/backend/internal/logging"
 	"go.uber.org/zap"
 )
 
@@ -169,7 +169,7 @@ func main() {
 
 	// 需要鉴权的管理接口
 	admin := api.Group("")
-	admin.Use(middleware.AuthMiddleware())
+	admin.Use(middleware.AuthMiddleware([]byte(cfg.JWT.Secret)))
 	{
 		// 获取模型价格（用于计费）
 		admin.GET("/model-price/:channel_id/:model", func(c *gin.Context) {

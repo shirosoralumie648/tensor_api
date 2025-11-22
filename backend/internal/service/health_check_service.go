@@ -92,118 +92,116 @@ case <-ctx.Done():
 fmt.Println("⏹️  Health check service stopped")
 return
 }
-}
-}
 
 // checkAllChannels 检查所有启用的渠道
 func (s *DefaultHealthCheckService) checkAllChannels(ctx context.Context) {
-var channels []model.Channel
-if err := s.db.Where("enabled = ? AND deleted_at IS NULL", true).Find(&channels).Error; err \!= nil {
-fmt.Printf("❌ Failed to query channels: %v\n", err)
-return
-}
+	var channels []model.Channel
+	if err := s.db.Where("enabled = ? AND deleted_at IS NULL", true).Find(&channels).Error; err != nil {
+		fmt.Printf("❌ Failed to query channels: %v\n", err)
+		return
+	}
 
-fmt.Printf("🔍 Checking %d channels...\n", len(channels))
+	fmt.Printf("🔍 Checking %d channels...\n", len(channels))
 
-sem := make(chan struct{}, 5)
-var wg sync.WaitGroup
+	sem := make(chan struct{}, 5)
+	var wg sync.WaitGroup
 
-for _, ch := range channels {
-wg.Add(1)
-go func(channel model.Channel) {
-defer wg.Done()
+	for _, ch := range channels {
+		wg.Add(1)
+		go func(channel model.Channel) {
+			defer wg.Done()
 
-sem <- struct{}{}
-defer func() { <-sem }()
+			sem <- struct{}{}
+			defer func() { <-sem }()
 
-result, err := s.CheckChannel(ctx, channel.ID)
-if err \!= nil {
-fmt.Printf("❌ Health check failed for channel %s: %v\n", channel.Name, err)
-return
-}
+			result, err := s.CheckChannel(ctx, channel.ID)
+			if err != nil {
+				fmt.Printf("❌ Health check failed for channel %s: %v\n", channel.Name, err)
+				return
+			}
 
-s.handleCheckResult(ctx, &channel, result)
-}(ch)
-}
+			s.handleCheckResult(ctx, &channel, result)
+		}(ch)
+	}
 
-wg.Wait()
-fmt.Println("✅ Health check completed")
+	wg.Wait()
+	fmt.Println("✅ Health check completed")
 }
 
 // CheckChannel 检查单个渠道
 func (s *DefaultHealthCheckService) CheckChannel(ctx context.Context, channelID int) (*HealthCheckResult, error) {
-var channel model.Channel
-if err := s.db.First(&channel, channelID).Error; err \!= nil {
-return nil, fmt.Errorf("channel not found: %w", err)
-}
+	var channel model.Channel
+	if err := s.db.First(&channel, channelID).Error; err != nil {
+		return nil, fmt.Errorf("channel not found: %w", err)
+	}
 
-apiKeys := strings.Split(channel.APIKey, ",")
-if len(apiKeys) == 0 || apiKeys[0] == "" {
-return &HealthCheckResult{
-ChannelID: channelID,
-Success:   false,
-Error:     "no API key configured",
-CheckedAt: time.Now(),
-}, nil
-}
+	apiKeys := strings.Split(channel.APIKey, ",")
+	if len(apiKeys) == 0 || apiKeys[0] == "" {
+		return &HealthCheckResult{
+			ChannelID: channelID,
+			Success:   false,
+			Error:     "no API key configured",
+			CheckedAt: time.Now(),
+		}, nil
+	}
 
-config := &adapter.AdapterConfig{
-Type:    channel.Type,
-BaseURL: channel.BaseURL,
-APIKey:  strings.TrimSpace(apiKeys[0]),
-Timeout: 30 * time.Second,
-}
+	config := &adapter.AdapterConfig{
+		Type:    channel.Type,
+		BaseURL: channel.BaseURL,
+		APIKey:  strings.TrimSpace(apiKeys[0]),
+		Timeout: 30 * time.Second,
+	}
 
-adapterInstance, err := s.configManager.GetAdapter(channel.Type, config)
-if err \!= nil {
-return &HealthCheckResult{
-ChannelID: channelID,
-Success:   false,
-Error:     fmt.Sprintf("failed to create adapter: %v", err),
-CheckedAt: time.Now(),
-}, nil
-}
+	adapterInstance, err := s.configManager.GetAdapter(channel.Type, config)
+	if err != nil {
+		return &HealthCheckResult{
+			ChannelID: channelID,
+			Success:   false,
+			Error:     fmt.Sprintf("failed to create adapter: %v", err),
+			CheckedAt: time.Now(),
+		}, nil
+	}
 
-start := time.Now()
+	start := time.Now()
 
-testModel := "gpt-3.5-turbo"
-if channel.SupportModels \!= "" {
-models := strings.Split(channel.SupportModels, ",")
-if len(models) > 0 {
-testModel = strings.TrimSpace(models[0])
-}
-}
+	testModel := "gpt-3.5-turbo"
+	if channel.SupportModels != "" {
+		models := strings.Split(channel.SupportModels, ",")
+		if len(models) > 0 {
+			testModel = strings.TrimSpace(models[0])
+		}
+	}
 
-testReq := &relay.ChatCompletionRequest{
-Model: testModel,
-Messages: []relay.ChatMessage{
-{Role: "user", Content: "Hi"},
-},
-MaxTokens: 5,
-}
+	testReq := &relay.ChatCompletionRequest{
+		Model: testModel,
+		Messages: []relay.ChatMessage{
+			{Role: "user", Content: "Hi"},
+		},
+		MaxTokens: 5,
+	}
 
-_, err = adapterInstance.ChatCompletion(ctx, testReq)
-duration := time.Since(start)
+	_, err = adapterInstance.ChatCompletion(ctx, testReq)
+	duration := time.Since(start)
 
-result := &HealthCheckResult{
-ChannelID:    channelID,
-Success:      err == nil,
-ResponseTime: duration.Milliseconds(),
-CheckedAt:    time.Now(),
-}
+	result := &HealthCheckResult{
+		ChannelID:    channelID,
+		Success:      err == nil,
+		ResponseTime: duration.Milliseconds(),
+		CheckedAt:    time.Now(),
+	}
 
-if err \!= nil {
-result.Error = err.Error()
-}
+	if err != nil {
+		result.Error = err.Error()
+	}
 
-s.saveCheckResult(result)
-return result, nil
+	s.saveCheckResult(result)
+	return result, nil
 }
 
 // handleCheckResult 处理检查结果
 func (s *DefaultHealthCheckService) handleCheckResult(ctx context.Context, channel *model.Channel, result *HealthCheckResult) {
-if result.Success {
-s.resetFailureCount(channel.ID)
+	if result.Success {
+		s.resetFailureCount(channel.ID)
 
 updates := map[string]interface{}{
 "response_time": result.ResponseTime,
