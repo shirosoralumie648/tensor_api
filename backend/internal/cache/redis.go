@@ -21,33 +21,22 @@ type RedisClient struct {
 
 // CacheEntry 缓存条目
 type CacheEntry struct {
-	Key      string
-	Value    interface{}
-	TTL      time.Duration
+	Key       string
+	Value     interface{}
+	TTL       time.Duration
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	HitCount  int64
 }
 
-// CacheStats 缓存统计
-type CacheStats struct {
-	mu           sync.RWMutex
-	Hits         int64
-	Misses       int64
-	Sets         int64
-	Deletes      int64
-	Expirations  int64
-	EvictionSize int64
-}
-
 // CacheConfig Redis 配置
 type CacheConfig struct {
-	Addrs      []string
-	Password   string
-	DB         int
-	PoolSize   int
-	MaxRetries int
-	TTL        time.Duration
+	Addrs       []string
+	Password    string
+	DB          int
+	PoolSize    int
+	MaxRetries  int
+	TTL         time.Duration
 	ClusterMode bool
 }
 
@@ -139,7 +128,7 @@ func (rc *RedisClient) Delete(ctx context.Context, key string) error {
 	if _, exists := rc.data[key]; exists {
 		delete(rc.data, key)
 		delete(rc.ttls, key)
-		
+
 		rc.stats.mu.Lock()
 		rc.stats.Deletes++
 		rc.stats.mu.Unlock()
@@ -359,7 +348,7 @@ func (rc *RedisClient) cleanupExpired() {
 		for _, key := range expiredKeys {
 			delete(rc.data, key)
 			delete(rc.ttls, key)
-			
+
 			rc.stats.mu.Lock()
 			rc.stats.Expirations++
 			rc.stats.mu.Unlock()
@@ -371,9 +360,9 @@ func (rc *RedisClient) cleanupExpired() {
 
 // Pipeline 管道操作
 type Pipeline struct {
-	client    *RedisClient
-	commands  []*pipelineCommand
-	mu        sync.Mutex
+	client   *RedisClient
+	commands []*pipelineCommand
+	mu       sync.Mutex
 }
 
 type pipelineCommand struct {
@@ -436,4 +425,3 @@ func (p *Pipeline) Execute(ctx context.Context) error {
 	p.commands = make([]*pipelineCommand, 0)
 	return nil
 }
-

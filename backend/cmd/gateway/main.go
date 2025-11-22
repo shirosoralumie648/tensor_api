@@ -9,11 +9,11 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/oblivious/backend/internal/config"
-	"github.com/oblivious/backend/internal/database"
-	"github.com/oblivious/backend/internal/middleware"
-	"github.com/oblivious/backend/internal/utils"
-	"github.com/oblivious/backend/pkg/logger"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/config"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/database"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/middleware"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/utils"
+	"github.com/shirosoralumie648/Oblivious/backend/pkg/logger"
 	"go.uber.org/zap"
 )
 

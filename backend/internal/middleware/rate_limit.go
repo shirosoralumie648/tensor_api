@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/oblivious/backend/internal/database"
-	"github.com/oblivious/backend/internal/utils"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/database"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/utils"
 )
 
 type RateLimitConfig struct {

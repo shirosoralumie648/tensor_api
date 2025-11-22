@@ -9,6 +9,16 @@ import (
 	"time"
 )
 
+// ChannelSelectOptions 渠道选择选项
+type ChannelSelectOptions struct {
+	ChannelType     string
+	Model           string
+	UserGroup       string
+	ExcludeIDs      []int
+	Region          string
+	MinAvailability float64
+}
+
 // LoadBalanceStrategy 负载均衡策略
 type LoadBalanceStrategy int
 
@@ -86,17 +96,17 @@ type LoadBalancerConfig struct {
 // DefaultLoadBalancerConfig 默认配置
 func DefaultLoadBalancerConfig() *LoadBalancerConfig {
 	return &LoadBalancerConfig{
-		Strategy:                        LBStrategyWeightedRoundRobin,
-		EnableHealthCheck:               true,
-		HealthCheckConfig:               DefaultHealthCheckConfig(),
-		EnableCircuitBreaker:            true,
-		CircuitBreakerFailureThreshold:  5,
-		CircuitBreakerSuccessThreshold:  3,
-		CircuitBreakerTimeout:           1 * time.Minute,
-		MaxRetries:                      3,
-		RetryInterval:                   100 * time.Millisecond,
-		EnableAdaptiveWeight:            true,
-		WeightAdjustInterval:            5 * time.Minute,
+		Strategy:                       LBStrategyWeightedRoundRobin,
+		EnableHealthCheck:              true,
+		HealthCheckConfig:              DefaultHealthCheckConfig(),
+		EnableCircuitBreaker:           true,
+		CircuitBreakerFailureThreshold: 5,
+		CircuitBreakerSuccessThreshold: 3,
+		CircuitBreakerTimeout:          1 * time.Minute,
+		MaxRetries:                     3,
+		RetryInterval:                  100 * time.Millisecond,
+		EnableAdaptiveWeight:           true,
+		WeightAdjustInterval:           5 * time.Minute,
 	}
 }
 
@@ -123,10 +133,10 @@ type LoadBalancer struct {
 	weightAdjustStopCh chan struct{}
 
 	// 统计信息
-	totalRequests  int64
-	successCount   int64
-	failureCount   int64
-	statsMu        sync.RWMutex
+	totalRequests int64
+	successCount  int64
+	failureCount  int64
+	statsMu       sync.RWMutex
 
 	// 停止信号
 	stopCh chan struct{}
@@ -145,13 +155,13 @@ func NewLoadBalancer(cache *ChannelCache, config *LoadBalancerConfig) *LoadBalan
 	}
 
 	lb := &LoadBalancer{
-		cache:               cache,
-		config:              config,
-		circuitBreakers:     make(map[string]*CircuitBreaker),
-		roundRobinCounter:   0,
-		weightAdjustStopCh:  make(chan struct{}),
-		logFunc:             defaultLogFunc,
-		stopCh:              make(chan struct{}),
+		cache:              cache,
+		config:             config,
+		circuitBreakers:    make(map[string]*CircuitBreaker),
+		roundRobinCounter:  0,
+		weightAdjustStopCh: make(chan struct{}),
+		logFunc:            defaultLogFunc,
+		stopCh:             make(chan struct{}),
 	}
 
 	// 创建健康检查器
@@ -495,13 +505,13 @@ func (lb *LoadBalancer) GetStatistics() map[string]interface{} {
 	}
 
 	return map[string]interface{}{
-		"strategy":          lb.config.Strategy.String(),
-		"total_requests":    total,
-		"success_count":     success,
-		"failure_count":     failure,
-		"success_rate":      successRate,
-		"circuit_breakers":  len(lb.circuitBreakers),
-		"health_check":      lb.config.EnableHealthCheck,
+		"strategy":         lb.config.Strategy.String(),
+		"total_requests":   total,
+		"success_count":    success,
+		"failure_count":    failure,
+		"success_rate":     successRate,
+		"circuit_breakers": len(lb.circuitBreakers),
+		"health_check":     lb.config.EnableHealthCheck,
 	}
 }
 
@@ -553,7 +563,7 @@ func (lb *LoadBalancer) adjustWeights() {
 // LoadBalancerManager 负载均衡器管理器
 type LoadBalancerManager struct {
 	// 负载均衡器映射
-	balancers map[string]*LoadBalancer
+	balancers   map[string]*LoadBalancer
 	balancersMu sync.RWMutex
 
 	// 日志函数
@@ -627,4 +637,3 @@ func hashString(s string) uint64 {
 	}
 	return hash
 }
-

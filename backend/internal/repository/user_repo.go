@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 
-	"github.com/oblivious/backend/internal/database"
-	"github.com/oblivious/backend/internal/model"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/database"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
 	"gorm.io/gorm"
 )
 

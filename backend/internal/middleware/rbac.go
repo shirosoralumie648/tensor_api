@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/oblivious/backend/internal/cache"
-	"github.com/oblivious/backend/internal/model"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/cache"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
 )
 
 // RBACManager RBAC 管理器

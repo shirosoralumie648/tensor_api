@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"github.com/oblivious/backend/internal/service"
-	"github.com/oblivious/backend/internal/utils"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/service"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/utils"
 )
 
 // KBHandler 处理知识库相关的 HTTP 请求

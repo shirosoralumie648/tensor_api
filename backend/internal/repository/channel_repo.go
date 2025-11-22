@@ -5,8 +5,8 @@ import (
 	"errors"
 	"strings"
 
-	"github.com/oblivious/backend/internal/database"
-	"github.com/oblivious/backend/internal/model"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/database"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
 	"gorm.io/gorm"
 )
 
@@ -25,7 +25,40 @@ func (r *ChannelRepository) Create(ctx context.Context, channel *model.Channel) 
 	return r.db.WithContext(ctx).Create(channel).Error
 }
 
-// FindByID 根据 ID 获取渠道
+// GetByID 根据 ID 获取渠道（包括禁用的）
+func (r *ChannelRepository) GetByID(ctx context.Context, id int) (*model.Channel, error) {
+	var channel model.Channel
+	err := r.db.WithContext(ctx).Where("id = ? AND deleted_at IS NULL", id).First(&channel).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &channel, nil
+}
+
+// List 分页获取渠道列表
+func (r *ChannelRepository) List(ctx context.Context, page, pageSize int) ([]*model.Channel, int64, error) {
+	var channels []*model.Channel
+	var total int64
+
+	offset := (page - 1) * pageSize
+	query := r.db.WithContext(ctx).Model(&model.Channel{}).Where("deleted_at IS NULL")
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.Order("id DESC").Offset(offset).Limit(pageSize).Find(&channels).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return channels, total, nil
+}
+
+// FindByID 根据 ID 获取启用渠道
 func (r *ChannelRepository) FindByID(ctx context.Context, id int) (*model.Channel, error) {
 	var channel model.Channel
 	err := r.db.WithContext(ctx).Where("id = ? AND enabled = ? AND deleted_at IS NULL", id, true).First(&channel).Error
@@ -164,4 +197,3 @@ func (r *ModelPriceRepository) Update(ctx context.Context, price *model.ModelPri
 func (r *ModelPriceRepository) Delete(ctx context.Context, id int) error {
 	return r.db.WithContext(ctx).Model(&model.ModelPrice{}).Where("id = ?", id).Update("deleted_at", gorm.Expr("CURRENT_TIMESTAMP")).Error
 }
-

@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/oblivious/backend/internal/config"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/config"
 )
 
 type Claims struct {
@@ -80,5 +80,3 @@ func ValidateToken(tokenString string) (bool, error) {
 	}
 	return true, nil
 }
-
-

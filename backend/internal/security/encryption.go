@@ -8,6 +8,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 // EncryptionManager 加密管理器

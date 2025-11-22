@@ -7,10 +7,10 @@ import (
 	"io"
 
 	"github.com/google/uuid"
-	"github.com/oblivious/backend/internal/model"
-	"github.com/oblivious/backend/internal/relay"
-	"github.com/oblivious/backend/internal/repository"
-	"github.com/oblivious/backend/pkg/logger"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/relay"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/repository"
+	"github.com/shirosoralumie648/Oblivious/backend/pkg/logger"
 	"go.uber.org/zap"
 )
 
@@ -171,22 +171,44 @@ func (s *ChatService) SendMessage(ctx context.Context, userID int, req *SendMess
 	})
 
 	// 5. 调用中转服务获取 AI 响应
-	// 当前实现：使用模拟响应（Week 6 完整实现 HTTP 调用）
-	// TODO: 通过 RelayClient HTTP 调用实际的 Relay 服务
-	aiContent := fmt.Sprintf("这是一个临时的 AI 回复。模型: %s，您说了：%s", session.Model, req.Content)
-	inputTokens := 0
-	outputTokens := 0
+	// 构建 Relay 请求
+	relayMessages := make([]relay.ChatMessage, 0, len(messages))
+	for _, msg := range messages {
+		if m, ok := msg.(map[string]interface{}); ok {
+			relayMessages = append(relayMessages, relay.ChatMessage{
+				Role:    m["role"].(string),
+				Content: m["content"].(string),
+			})
+		}
+	}
 
-	// 完整实现（待做）:
-	// relayClient := client.NewRelayClient(cfg.Services.RelayServiceURL)
-	// relayResp, err := relayClient.ChatCompletion(ctx, &client.ChatCompletionRequest{
-	//     Model: session.Model,
-	//     Messages: convertMessages(messages),
-	//     Temperature: session.Temperature,
-	//     MaxTokens: session.MaxTokens,
-	// })
-	// 如果成功提取 Token 信息
-	_ = messages // 使用消息列表以避免未使用变量警告
+	relayReq := &relay.ChatCompletionRequest{
+		Model:       session.Model,
+		Messages:    relayMessages,
+		Temperature: session.Temperature,
+		Stream:      false,
+	}
+
+	// 注入上下文长度限制（如果模型支持）
+	if session.MaxTokens != nil {
+		relayReq.MaxTokens = *session.MaxTokens
+	}
+
+	// 调用 Relay Service
+	relayResp, err := s.relayService.RelayChatCompletion(ctx, relayReq)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get AI response: %w", err)
+	}
+
+	// 提取响应内容
+	aiContent := ""
+	if len(relayResp.Choices) > 0 {
+		aiContent = relayResp.Choices[0].Message.Content
+	}
+
+	// 提取 Token 使用量
+	inputTokens := relayResp.Usage.PromptTokens
+	outputTokens := relayResp.Usage.CompletionTokens
 
 	// 6. 创建 AI 消息
 	aiMsg := &model.Message{
@@ -396,12 +418,12 @@ func (s *ChatService) SendMessageStream(ctx context.Context, userID int, req *Se
 
 	// 10. 发送最终消息事件
 	finalMsg := map[string]interface{}{
-		"type":            "complete",
-		"message_id":      aiMsg.ID.String(),
-		"content":         fullContent,
-		"input_tokens":    totalInputTokens,
-		"output_tokens":   totalOutputTokens,
-		"total_tokens":    totalInputTokens + totalOutputTokens,
+		"type":          "complete",
+		"message_id":    aiMsg.ID.String(),
+		"content":       fullContent,
+		"input_tokens":  totalInputTokens,
+		"output_tokens": totalOutputTokens,
+		"total_tokens":  totalInputTokens + totalOutputTokens,
 	}
 	jsonData, _ := json.Marshal(finalMsg)
 	fmt.Fprintf(writer, "data: %s\n\n", string(jsonData))

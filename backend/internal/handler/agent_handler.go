@@ -5,8 +5,8 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/oblivious/backend/internal/service"
-	"github.com/oblivious/backend/internal/utils"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/service"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/utils"
 )
 
 // AgentHandler 处理助手相关的 HTTP 请求

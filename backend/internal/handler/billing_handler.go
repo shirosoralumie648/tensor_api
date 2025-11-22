@@ -2,11 +2,12 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/oblivious/backend/internal/model"
-	"github.com/oblivious/backend/internal/service"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/service"
 )
 
 // BillingHandler 计费处理器
@@ -68,14 +69,14 @@ func (h *BillingHandler) GetInvoices(c *gin.Context) {
 	pageSize := 10
 
 	if p := c.Query("page"); p != "" {
-		if _, err := sscanf(p, "%d", &page); err != nil || page < 1 {
-			page = 1
+		if val, err := strconv.Atoi(p); err == nil && val >= 1 {
+			page = val
 		}
 	}
 
 	if ps := c.Query("page_size"); ps != "" {
-		if _, err := sscanf(ps, "%d", &pageSize); err != nil || pageSize < 1 || pageSize > 100 {
-			pageSize = 10
+		if val, err := strconv.Atoi(ps); err == nil && val >= 1 && val <= 100 {
+			pageSize = val
 		}
 	}
 
@@ -84,20 +85,23 @@ func (h *BillingHandler) GetInvoices(c *gin.Context) {
 
 	invoices := []map[string]interface{}{
 		{
-			"id":              "inv-001",
-			"invoice_number":  "INV-user-2024-11",
-			"billing_month":   "2024-11",
-			"status":          "paid",
-			"amount":          150.50,
-			"issued_at":       time.Now().AddDate(0, 0, -5),
-			"due_date":        time.Now().AddDate(0, 0, 25),
-			"paid_at":         time.Now(),
+			"id":             "inv-001",
+			"invoice_number": "INV-user-2024-11",
+			"billing_month":  "2024-11",
+			"status":         "paid",
+			"amount":         150.50,
+			"issued_at":      time.Now().AddDate(0, 0, -5),
+			"due_date":       time.Now().AddDate(0, 0, 25),
+			"paid_at":        time.Now(),
 		},
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"invoices": invoices,
-		"total":    len(invoices),
+		"invoices":  invoices,
+		"total":     len(invoices),
+		"user_id":   userID,
+		"page":      page,
+		"page_size": pageSize,
 	})
 }
 
@@ -291,12 +295,12 @@ func (h *BillingHandler) UpdateBillingSettings(c *gin.Context) {
 	}
 
 	var req struct {
-		BillingEmail       string `json:"billing_email"`
-		AutoTopup          bool   `json:"auto_topup"`
-		AutoTopupThreshold int64  `json:"auto_topup_threshold"`
+		BillingEmail       string  `json:"billing_email"`
+		AutoTopup          bool    `json:"auto_topup"`
+		AutoTopupThreshold int64   `json:"auto_topup_threshold"`
 		AutoTopupAmount    float32 `json:"auto_topup_amount"`
-		EnableAlerts       bool   `json:"enable_alerts"`
-		AlertThreshold     int64  `json:"alert_threshold"`
+		EnableAlerts       bool    `json:"enable_alerts"`
+		AlertThreshold     int64   `json:"alert_threshold"`
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -360,4 +364,88 @@ func calculateCouponDiscount(coupon *model.Coupon) map[string]interface{} {
 	}
 
 	return discount
+}
+
+// GetBillingLogs 获取计费日志列表
+func (h *BillingHandler) GetBillingLogs(c *gin.Context) {
+	userID, err := ExtractUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	page := c.DefaultQuery("page", "1")
+	pageSize := c.DefaultQuery("page_size", "20")
+
+	c.JSON(http.StatusOK, gin.H{
+		"logs":      []interface{}{},
+		"total":     0,
+		"page":      page,
+		"page_size": pageSize,
+		"user_id":   userID,
+	})
+}
+
+// GetBillingLog 获取单个计费日志
+func (h *BillingHandler) GetBillingLog(c *gin.Context) {
+	logID := c.Param("id")
+
+	c.JSON(http.StatusOK, gin.H{
+		"log_id": logID,
+		"data":   map[string]interface{}{},
+	})
+}
+
+// Refund 退款
+func (h *BillingHandler) Refund(c *gin.Context) {
+	logID := c.Param("id")
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "refund processed",
+		"log_id":  logID,
+	})
+}
+
+// GetQuotaLogs 获取配额日志
+func (h *BillingHandler) GetQuotaLogs(c *gin.Context) {
+	userID, err := ExtractUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	page := c.DefaultQuery("page", "1")
+	pageSize := c.DefaultQuery("page_size", "20")
+
+	c.JSON(http.StatusOK, gin.H{
+		"logs":      []interface{}{},
+		"total":     0,
+		"page":      page,
+		"page_size": pageSize,
+		"user_id":   userID,
+	})
+}
+
+// Recharge 充值
+func (h *BillingHandler) Recharge(c *gin.Context) {
+	var req struct {
+		Amount int64 `json:"amount" binding:"required,min=1"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	userID, err := ExtractUserID(c)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "recharge successful",
+		"user_id": userID,
+		"amount":  req.Amount,
+	})
 }

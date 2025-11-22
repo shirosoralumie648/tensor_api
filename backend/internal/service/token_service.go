@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oblivious/backend/internal/model"
-	"github.com/oblivious/backend/internal/repository"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/repository"
 )
 
 // TokenService Token 服务
@@ -40,16 +40,16 @@ func (ts *TokenService) CreateToken(
 	expireAt := time.Now().AddDate(0, 0, expireDays)
 
 	token := &model.Token{
-		UserID:      userID,
-		TokenHash:   tokenHash,
-		Name:        name,
-		Status:      model.TokenStatusNormal,
-		QuotaUsed:   0,
-		CreatedAt:   time.Now(),
-		ExpireAt:    toNullTime(expireAt),
-		IPWhitelist: []string{},
+		UserID:         userID,
+		TokenHash:      tokenHash,
+		Name:           name,
+		Status:         model.TokenStatusNormal,
+		QuotaUsed:      0,
+		CreatedAt:      time.Now(),
+		ExpireAt:       toNullTime(expireAt),
+		IPWhitelist:    []string{},
 		ModelWhitelist: []string{},
-		Metadata:    make(map[string]interface{}),
+		Metadata:       make(map[string]interface{}),
 	}
 
 	if description != "" {
@@ -61,15 +61,16 @@ func (ts *TokenService) CreateToken(
 	}
 
 	// 保存到数据库
-	createdToken, err := ts.tokenRepo.Create(ctx, token)
+	err := ts.tokenRepo.Create(ctx, token)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create token: %w", err)
 	}
 
 	// 记录审计日志
-	_ = ts.logAudit(ctx, userID, createdToken.ID, model.TokenOpCreate, nil, &model.TokenStatusNormal, nil, "", "")
+	normalStatus := model.TokenStatusNormal
+	_ = ts.logAudit(ctx, userID, token.ID, model.TokenOpCreate, nil, &normalStatus, nil, "", "")
 
-	return createdToken, nil
+	return token, nil
 }
 
 // GetTokenByHash 通过 Hash 获取 Token
@@ -141,7 +142,7 @@ func (ts *TokenService) RenewToken(ctx context.Context, tokenID int, extendDays 
 	token.RenewedAt = toNullTime(time.Now())
 
 	// 更新数据库
-	_, err = ts.tokenRepo.Update(ctx, token)
+	err = ts.tokenRepo.Update(ctx, token)
 	if err != nil {
 		return fmt.Errorf("failed to update token: %w", err)
 	}
@@ -169,7 +170,7 @@ func (ts *TokenService) DisableToken(ctx context.Context, tokenID int, reason st
 	token.Status = newStatus
 
 	// 更新数据库
-	_, err = ts.tokenRepo.Update(ctx, token)
+	err = ts.tokenRepo.Update(ctx, token)
 	if err != nil {
 		return fmt.Errorf("failed to disable token: %w", err)
 	}
@@ -198,7 +199,7 @@ func (ts *TokenService) EnableToken(ctx context.Context, tokenID int) error {
 	token.Status = newStatus
 
 	// 更新数据库
-	_, err = ts.tokenRepo.Update(ctx, token)
+	err = ts.tokenRepo.Update(ctx, token)
 	if err != nil {
 		return fmt.Errorf("failed to enable token: %w", err)
 	}
@@ -223,7 +224,7 @@ func (ts *TokenService) SoftDeleteToken(ctx context.Context, tokenID int) error 
 	token.DeletedAt = toNullTime(time.Now())
 
 	// 更新数据库
-	_, err = ts.tokenRepo.Update(ctx, token)
+	err = ts.tokenRepo.Update(ctx, token)
 	if err != nil {
 		return fmt.Errorf("failed to delete token: %w", err)
 	}
@@ -252,7 +253,7 @@ func (ts *TokenService) RestoreToken(ctx context.Context, tokenID int) error {
 	token.DeletedAt = toNullTime(time.Time{})
 
 	// 更新数据库
-	_, err = ts.tokenRepo.Update(ctx, token)
+	err = ts.tokenRepo.Update(ctx, token)
 	if err != nil {
 		return fmt.Errorf("failed to restore token: %w", err)
 	}
@@ -294,7 +295,7 @@ func (ts *TokenService) UseQuota(ctx context.Context, tokenID int, amount int64)
 		}
 	}
 
-	_, err = ts.tokenRepo.Update(ctx, token)
+	err = ts.tokenRepo.Update(ctx, token)
 	if err != nil {
 		return fmt.Errorf("failed to update quota: %w", err)
 	}
@@ -319,7 +320,7 @@ func (ts *TokenService) RefundQuota(ctx context.Context, tokenID int, amount int
 
 	token.QuotaUsed -= amount
 
-	_, err = ts.tokenRepo.Update(ctx, token)
+	err = ts.tokenRepo.Update(ctx, token)
 	if err != nil {
 		return fmt.Errorf("failed to refund quota: %w", err)
 	}
@@ -376,7 +377,7 @@ func (ts *TokenService) updateTokenStatus(ctx context.Context, token *model.Toke
 	oldStatus := token.Status
 	token.Status = newStatus
 
-	_, err := ts.tokenRepo.Update(ctx, token)
+	err = ts.tokenRepo.Update(ctx, token)
 	if err != nil {
 		return fmt.Errorf("failed to update token status: %w", err)
 	}
@@ -395,7 +396,7 @@ func (ts *TokenService) updateLastUsedAt(ctx context.Context, tokenID int) error
 	}
 
 	token.LastUsedAt = toNullTime(time.Now())
-	_, err = ts.tokenRepo.Update(ctx, token)
+	err = ts.tokenRepo.Update(ctx, token)
 	return err
 }
 
@@ -441,9 +442,9 @@ func (ts *TokenService) logRenewal(
 	reason string,
 ) error {
 	renewalLog := &model.TokenRenewalLog{
-		TokenID:         tokenID,
-		RenewalReason:   reason,
-		CreatedAt:       time.Now(),
+		TokenID:       tokenID,
+		RenewalReason: reason,
+		CreatedAt:     time.Now(),
 	}
 
 	// 处理旧过期时间
@@ -455,7 +456,10 @@ func (ts *TokenService) logRenewal(
 
 	// 处理新过期时间
 	if newExpireAt != nil {
-		if nt, ok := newExpireAt.(interface{}).(interface{ Time() time.Time; Valid() bool }); ok {
+		if nt, ok := newExpireAt.(interface{}).(interface {
+			Time() time.Time
+			Valid() bool
+		}); ok {
 			renewalLog.NewExpireAt = toNullTime(nt.Time())
 		}
 	}
@@ -508,4 +512,3 @@ func (ts *TokenService) GetTokenDetailsJSON(token *model.Token) (string, error) 
 
 	return string(jsonData), nil
 }
-

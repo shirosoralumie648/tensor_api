@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v8"
-	"github.com/oblivious/backend/internal/config"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/config"
 )
 
 var RedisClient *redis.Client

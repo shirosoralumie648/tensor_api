@@ -2,7 +2,6 @@ package database
 
 import (
 	"testing"
-	"time"
 )
 
 func TestSchemaManager(t *testing.T) {
@@ -227,8 +226,8 @@ func BenchmarkSchemaValidation(b *testing.B) {
 func BenchmarkMigrationExecution(b *testing.B) {
 	mm := NewMigrationManager()
 
-	mm.RegisterMigration(1, "Test Migration", 
-		[]string{"SELECT 1"}, 
+	mm.RegisterMigration(1, "Test Migration",
+		[]string{"SELECT 1"},
 		[]string{"SELECT 0"})
 
 	b.ResetTimer()
@@ -236,5 +235,3 @@ func BenchmarkMigrationExecution(b *testing.B) {
 		mm.GetMigration(1)
 	}
 }
-
-

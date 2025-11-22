@@ -11,9 +11,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/oblivious/backend/internal/model"
-	"github.com/oblivious/backend/internal/repository"
-	"github.com/oblivious/backend/pkg/logger"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/repository"
+	"github.com/shirosoralumie648/Oblivious/backend/pkg/logger"
 	"go.uber.org/zap"
 )
 

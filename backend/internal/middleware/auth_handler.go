@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/oblivious/backend/internal/cache"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/cache"
 )
 
 // AuthHandler 认证处理器

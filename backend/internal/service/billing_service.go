@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/oblivious/backend/internal/model"
-	"github.com/oblivious/backend/internal/repository"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/repository"
 )
 
 // BillingService 计费服务
@@ -225,4 +225,3 @@ func (s *BillingService) RefundCharge(ctx context.Context, billingLogID int) err
 	// 更新计费日志状态为已退款
 	return s.billingRepo.UpdateStatus(ctx, billingLogID, 3)
 }
-

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/oblivious/backend/internal/config"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/config"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"

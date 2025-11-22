@@ -4,15 +4,16 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/cache"
 )
 
 // AuthMethod 认证方法类型
 type AuthMethod string
 
 const (
-	AuthMethodBearer  AuthMethod = "bearer"
-	AuthMethodClaude  AuthMethod = "claude"
-	AuthMethodGemini  AuthMethod = "gemini"
+	AuthMethodBearer    AuthMethod = "bearer"
+	AuthMethodClaude    AuthMethod = "claude"
+	AuthMethodGemini    AuthMethod = "gemini"
 	AuthMethodWebSocket AuthMethod = "websocket"
 )
 
@@ -167,3 +168,39 @@ func ExtractTokenGlobal(c *gin.Context) (string, AuthMethod, error) {
 	return globalExtractorFactory.ExtractToken(c)
 }
 
+// AuthFactory 认证中间件工厂
+type AuthFactory struct {
+	jwtSecret []byte
+	cache     cache.Cache
+}
+
+// NewAuthFactory 创建认证工厂
+func NewAuthFactory(jwtSecret []byte, cache cache.Cache) *AuthFactory {
+	return &AuthFactory{
+		jwtSecret: jwtSecret,
+		cache:     cache,
+	}
+}
+
+// JWT 创建 JWT 认证中间件
+func (af *AuthFactory) JWT() gin.HandlerFunc {
+	return AuthMiddleware(af.jwtSecret)
+}
+
+// JWTWithCache 创建带缓存的 JWT 认证中间件
+func (af *AuthFactory) JWTWithCache() gin.HandlerFunc {
+	if af.cache != nil {
+		return CachedAuthMiddleware(af.jwtSecret, nil) // TODO: 传入 CacheManager
+	}
+	return AuthMiddleware(af.jwtSecret)
+}
+
+// APIKey 创建 API 密钥认证中间件
+func (af *AuthFactory) APIKey() gin.HandlerFunc {
+	return APIKeyAuthMiddleware()
+}
+
+// Optional 创建可选认证中间件（认证失败不阻止请求）
+func (af *AuthFactory) Optional() gin.HandlerFunc {
+	return OptionalAuthMiddleware(af.jwtSecret)
+}

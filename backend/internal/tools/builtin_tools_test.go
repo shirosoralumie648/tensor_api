@@ -2,7 +2,6 @@ package tools
 
 import (
 	"context"
-	"os"
 	"testing"
 	"time"
 )
@@ -74,126 +73,6 @@ func TestCodeExecutorToolUnsupported(t *testing.T) {
 	}
 }
 
-func TestFileOperationToolRead(t *testing.T) {
-	tool := NewFileOperationTool("/tmp")
-	ctx := context.Background()
-
-	// Create test file
-	testFile := "/tmp/test_read.txt"
-	content := "test content"
-	os.WriteFile(testFile, []byte(content), 0644)
-	defer os.Remove(testFile)
-
-	result, err := tool.Execute(ctx, map[string]interface{}{
-		"operation": "read",
-		"path":      "test_read.txt",
-	})
-
-	if err != nil {
-		t.Errorf("FileOperationTool read failed: %v", err)
-	}
-
-	if result == nil {
-		t.Errorf("Expected read result")
-	}
-}
-
-func TestFileOperationToolWrite(t *testing.T) {
-	tool := NewFileOperationTool("/tmp")
-	ctx := context.Background()
-
-	testFile := "/tmp/test_write.txt"
-	defer os.Remove(testFile)
-
-	result, err := tool.Execute(ctx, map[string]interface{}{
-		"operation": "write",
-		"path":      "test_write.txt",
-		"content":   "test write content",
-	})
-
-	if err != nil {
-		t.Errorf("FileOperationTool write failed: %v", err)
-	}
-
-	if result == nil {
-		t.Errorf("Expected write result")
-	}
-
-	// Verify file was written
-	data, err := os.ReadFile(testFile)
-	if err != nil || string(data) != "test write content" {
-		t.Errorf("File content mismatch")
-	}
-}
-
-func TestFileOperationToolDelete(t *testing.T) {
-	tool := NewFileOperationTool("/tmp")
-	ctx := context.Background()
-
-	testFile := "/tmp/test_delete.txt"
-	os.WriteFile(testFile, []byte("content"), 0644)
-
-	result, err := tool.Execute(ctx, map[string]interface{}{
-		"operation": "delete",
-		"path":      "test_delete.txt",
-	})
-
-	if err != nil {
-		t.Errorf("FileOperationTool delete failed: %v", err)
-	}
-
-	if result == nil {
-		t.Errorf("Expected delete result")
-	}
-
-	// Verify file was deleted
-	if _, err := os.Stat(testFile); err == nil {
-		t.Errorf("File should be deleted")
-	}
-}
-
-func TestFileOperationToolList(t *testing.T) {
-	tool := NewFileOperationTool("/tmp")
-	ctx := context.Background()
-
-	result, err := tool.Execute(ctx, map[string]interface{}{
-		"operation": "list",
-		"path":      "",
-	})
-
-	if err != nil {
-		t.Errorf("FileOperationTool list failed: %v", err)
-	}
-
-	if result == nil {
-		t.Errorf("Expected list result")
-	}
-}
-
-func TestFileOperationToolPathSecurity(t *testing.T) {
-	tool := NewFileOperationTool("/tmp")
-	ctx := context.Background()
-
-	// Try to access path outside allowed directory
-	_, err := tool.Execute(ctx, map[string]interface{}{
-		"operation": "read",
-		"path":      "../../etc/passwd",
-	})
-
-	if err == nil {
-		t.Errorf("Expected security error for path traversal")
-	}
-}
-
-func TestFileOperationToolGetTool(t *testing.T) {
-	tool := NewFileOperationTool("/tmp")
-	toolDef := tool.GetTool()
-
-	if toolDef.Name != "file_operations" {
-		t.Errorf("Expected tool name file_operations")
-	}
-}
-
 func TestHTTPRequestTool(t *testing.T) {
 	tool := NewHTTPRequestTool()
 	ctx := context.Background()
@@ -241,8 +120,8 @@ func TestBuiltinToolsFactory(t *testing.T) {
 	}
 
 	tools := engine.ListTools()
-	if len(tools) != 4 {
-		t.Errorf("Expected 4 tools, got %d", len(tools))
+	if len(tools) != 3 {
+		t.Errorf("Expected 3 tools, got %d", len(tools))
 	}
 
 	// Verify tool names
@@ -251,7 +130,7 @@ func TestBuiltinToolsFactory(t *testing.T) {
 		toolNames[tool.Name] = true
 	}
 
-	expectedTools := []string{"web_search", "code_executor", "file_operations", "http_request"}
+	expectedTools := []string{"web_search", "code_executor", "http_request"}
 	for _, name := range expectedTools {
 		if !toolNames[name] {
 			t.Errorf("Expected tool %s not found", name)
@@ -283,22 +162,3 @@ func BenchmarkWebSearchTool(b *testing.B) {
 		})
 	}
 }
-
-func BenchmarkFileOperationToolRead(b *testing.B) {
-	tool := NewFileOperationTool("/tmp")
-	ctx := context.Background()
-
-	// Create test file
-	testFile := "/tmp/bench_test.txt"
-	os.WriteFile(testFile, []byte("test content"), 0644)
-	defer os.Remove(testFile)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		tool.Execute(ctx, map[string]interface{}{
-			"operation": "read",
-			"path":      "bench_test.txt",
-		})
-	}
-}
-

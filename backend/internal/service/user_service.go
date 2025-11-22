@@ -6,10 +6,10 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/oblivious/backend/internal/config"
-	"github.com/oblivious/backend/internal/model"
-	"github.com/oblivious/backend/internal/repository"
-	"github.com/oblivious/backend/internal/utils"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/config"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/repository"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/utils"
 )
 
 type UserService struct {

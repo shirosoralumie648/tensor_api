@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/oblivious/backend/pkg/logger"
+	"github.com/shirosoralumie648/Oblivious/backend/pkg/logger"
 	"go.uber.org/zap"
 )
 

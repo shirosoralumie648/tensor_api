@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/oblivious/backend/internal/database"
-	"github.com/oblivious/backend/internal/model"
-	"github.com/oblivious/backend/pkg/logger"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/database"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
+	"github.com/shirosoralumie648/Oblivious/backend/pkg/logger"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )

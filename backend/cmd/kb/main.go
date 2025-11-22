@@ -6,13 +6,13 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/oblivious/backend/internal/config"
-	"github.com/oblivious/backend/internal/database"
-	"github.com/oblivious/backend/internal/handler"
-	"github.com/oblivious/backend/internal/middleware"
-	"github.com/oblivious/backend/internal/service"
-	"github.com/oblivious/backend/internal/utils"
-	"github.com/oblivious/backend/pkg/logger"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/config"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/database"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/handler"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/middleware"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/service"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/utils"
+	"github.com/shirosoralumie648/Oblivious/backend/pkg/logger"
 	"go.uber.org/zap"
 )
 
@@ -94,4 +94,3 @@ func main() {
 		logger.Fatal("Failed to start server", zap.Error(err))
 	}
 }
-

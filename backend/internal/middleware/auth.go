@@ -144,4 +144,29 @@ func APIKeyAuthMiddleware() gin.HandlerFunc {
 	}
 }
 
-// RateLimitMiddleware 和 CORSMiddleware 已在其他文件中定义
+// OptionalAuthMiddleware 可选认证中间件（认证失败不阻止请求）
+func OptionalAuthMiddleware(signingKey []byte) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		// 尝试从请求头中获取令牌
+		tokenString, err := extractTokenFromHeader(c)
+		if err != nil {
+			// 认证失败，但不阻止请求
+			c.Next()
+			return
+		}
+
+		// 解析令牌
+		claims, err := ParseToken(tokenString, signingKey)
+		if err != nil {
+			// 认证失败，但不阻止请求
+			c.Next()
+			return
+		}
+
+		// 将用户 ID 存储在上下文中
+		c.Set(UserIDKey, claims.UserID)
+		c.Set(TokenKey, tokenString)
+
+		c.Next()
+	}
+}

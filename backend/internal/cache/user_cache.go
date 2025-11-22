@@ -53,17 +53,6 @@ type cacheEntry struct {
 	mu       sync.RWMutex
 }
 
-// CacheStats 缓存统计数据
-type CacheStats struct {
-	L1Hits       int64
-	L1Misses     int64
-	L2Hits       int64
-	L2Misses     int64
-	DBHits       int64
-	TotalQueries int64
-	mu           sync.RWMutex
-}
-
 // NewCacheManager 创建新的缓存管理器
 func NewCacheManager(redisClient *redis.Client, l1TTL, l2TTL time.Duration) *CacheManager {
 	return &CacheManager{

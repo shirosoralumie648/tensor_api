@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
-	"github.com/oblivious/backend/internal/model"
+	"github.com/shirosoralumie648/Oblivious/backend/internal/model"
 )
 
 func TestRequirePermission(t *testing.T) {
