@@ -1,7 +1,6 @@
 package chat
 
 import (
-	"context"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -48,7 +47,7 @@ type StreamClient struct {
 	lastMu       sync.RWMutex
 
 	// 是否关闭
-	closed bool
+	closed  bool
 	closeMu sync.Mutex
 
 	// 关闭信号
@@ -138,7 +137,7 @@ type StreamSession struct {
 	ModelName string
 
 	// 活跃客户端列表
-	clients map[string]*StreamClient
+	clients   map[string]*StreamClient
 	clientsMu sync.RWMutex
 
 	// 创建时间
@@ -286,22 +285,22 @@ func (ss *StreamSession) GetStatistics() map[string]interface{} {
 	ss.activityMu.RUnlock()
 
 	return map[string]interface{}{
-		"session_id":      ss.SessionID,
-		"user_id":         ss.UserID,
-		"model_name":      ss.ModelName,
-		"client_count":    ss.GetClientCount(),
-		"total_messages":  atomic.LoadInt64(&ss.totalMessages),
-		"total_errors":    atomic.LoadInt64(&ss.totalErrors),
-		"created_at":      ss.CreatedAt,
-		"last_activity":   lastActivity,
-		"client_stats":    clientStats,
+		"session_id":     ss.SessionID,
+		"user_id":        ss.UserID,
+		"model_name":     ss.ModelName,
+		"client_count":   ss.GetClientCount(),
+		"total_messages": atomic.LoadInt64(&ss.totalMessages),
+		"total_errors":   atomic.LoadInt64(&ss.totalErrors),
+		"created_at":     ss.CreatedAt,
+		"last_activity":  lastActivity,
+		"client_stats":   clientStats,
 	}
 }
 
 // StreamManager 流式管理器
 type StreamManager struct {
 	// 会话映射
-	sessions map[string]*StreamSession
+	sessions   map[string]*StreamSession
 	sessionsMu sync.RWMutex
 
 	// 客户端超时时间
@@ -311,11 +310,11 @@ type StreamManager struct {
 	sessionTimeout time.Duration
 
 	// 统计信息
-	totalSessions int64
+	totalSessions  int64
 	activeSessions int64
 
 	// 清理 goroutine 控制
-	stopCh chan struct{}
+	stopCh  chan struct{}
 	running bool
 	runMu   sync.Mutex
 
@@ -503,4 +502,3 @@ func (sm *StreamManager) GetStatistics() map[string]interface{} {
 func defaultLogFunc(level, msg string, args ...interface{}) {
 	fmt.Printf("[%s] %s\n", level, msg)
 }
-

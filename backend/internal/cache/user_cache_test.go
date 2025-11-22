@@ -59,6 +59,9 @@ func TestCacheManager_SetAndGetUserCache(t *testing.T) {
 	retrieved, err := cm.GetUserCache(ctx, testUser.UserID)
 	// 注意：如果数据库查询未实现，GetUserCache 会失败
 	// 这里我们只测试缓存层的逻辑
+	if err == nil {
+		assert.Equal(t, testUser.UserID, retrieved.UserID)
+	}
 }
 
 func TestCacheManager_L1CacheExpiry(t *testing.T) {
