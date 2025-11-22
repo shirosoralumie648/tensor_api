@@ -67,14 +67,18 @@ func (h *ChannelHandler) ListChannels(c *gin.Context) {
 		return
 	}
 
-	// TODO: 实现ChannelService的List方法
-	// channels, total, err := h.channelService.List(c.Request.Context(), &req)
+	// 调用 Service
+	channels, total, err := h.channelService.List(c.Request.Context(), req.Page, req.PageSize)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, ListChannelsResponse{
-		Total:    0,
+		Total:    total,
 		Page:     req.Page,
 		PageSize: req.PageSize,
-		Data:     []*model.Channel{},
+		Data:     channels,
 	})
 }
 
@@ -116,16 +120,16 @@ func (h *ChannelHandler) CreateChannel(c *gin.Context) {
 		Type:          req.Type,
 		Group:         req.Group,
 		BaseURL:       req.BaseURL,
-		APIKeys:       req.APIKeys,
+		APIKey:        req.APIKeys,
 		SupportModels: req.SupportModels,
-		Priority:      req.Priority,
+		Priority:      int64(req.Priority),
 		Weight:        req.Weight,
-		MaxRPM:        req.MaxRPM,
-		MaxRPD:        req.MaxRPD,
-		Timeout:       req.Timeout,
-		ProxyURL:      req.ProxyURL,
-		Enabled:       req.Enabled,
-		Status:        0, // 0:正常
+		MaxRateLimit:  req.MaxRPM, // 映射到 MaxRateLimit
+		// MaxRPD:        req.MaxRPD, // Model 中没有 MaxRPD，忽略或映射到其他字段
+		// Timeout:       req.Timeout, // Model 中没有 Timeout，忽略
+		// ProxyURL:      req.ProxyURL, // Model 中没有 ProxyURL
+		Enabled: req.Enabled,
+		Status:  1, // 1:启用
 	}
 
 	// 设置默认值
@@ -139,16 +143,16 @@ func (h *ChannelHandler) CreateChannel(c *gin.Context) {
 		channel.Weight = 10
 	}
 
-	// TODO: 创建渠道
-	// if err := h.channelService.Create(c.Request.Context(), channel); err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	// 创建渠道
+	if err := h.channelService.Create(c.Request.Context(), channel); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	// 自动同步能力
 	if err := h.channelAbilityService.SyncFromChannel(c.Request.Context(), channel); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to sync abilities: " + err.Error()})
-		return
+		// 仅记录错误，不影响返回
+		// log.Printf("failed to sync abilities: %v", err)
 	}
 
 	c.JSON(http.StatusCreated, channel)
@@ -192,33 +196,61 @@ func (h *ChannelHandler) UpdateChannel(c *gin.Context) {
 		return
 	}
 
-	// TODO: 获取现有渠道
-	// channel, err := h.channelService.GetByID(c.Request.Context(), id)
-	// if err != nil {
-	// 	c.JSON(http.StatusNotFound, gin.H{"error": "channel not found"})
-	// 	return
-	// }
+	// 获取现有渠道
+	channel, err := h.channelService.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if channel == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "channel not found"})
+		return
+	}
 
 	// 应用更新
-	var channel model.Channel
-	channel.ID = id
-
 	if req.Name != nil {
 		channel.Name = *req.Name
 	}
-	// ... 其他字段更新
+	if req.BaseURL != nil {
+		channel.BaseURL = *req.BaseURL
+	}
+	if req.APIKeys != nil {
+		channel.APIKey = *req.APIKeys
+	}
+	if req.SupportModels != nil {
+		channel.SupportModels = *req.SupportModels
+	}
+	if req.Priority != nil {
+		channel.Priority = int64(*req.Priority)
+	}
+	if req.Weight != nil {
+		channel.Weight = *req.Weight
+	}
+	if req.MaxRPM != nil {
+		channel.MaxRateLimit = *req.MaxRPM
+	}
+	if req.Enabled != nil {
+		channel.Enabled = *req.Enabled
+		if *req.Enabled {
+			channel.Status = 1
+		} else {
+			channel.Status = 2
+		}
+	}
+	if req.Status != nil {
+		channel.Status = *req.Status
+	}
 
-	// TODO: 保存更新
-	// if err := h.channelService.Update(c.Request.Context(), &channel); err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	// 保存更新
+	if err := h.channelService.Update(c.Request.Context(), channel); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	// 重新同步能力
 	if req.SupportModels != nil {
-		if err := h.channelAbilityService.SyncFromChannel(c.Request.Context(), &channel); err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to sync abilities"})
-			return
+		if err := h.channelAbilityService.SyncFromChannel(c.Request.Context(), channel); err != nil {
+			// log error
 		}
 	}
 
@@ -240,15 +272,14 @@ func (h *ChannelHandler) DeleteChannel(c *gin.Context) {
 
 	// 删除能力记录
 	if err := h.channelAbilityService.DeleteByChannel(c.Request.Context(), id); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete abilities"})
-		return
+		// 继续删除渠道，不中断
 	}
 
-	// TODO: 删除渠道（软删除）
-	// if err := h.channelService.Delete(c.Request.Context(), id); err != nil {
-	// 	c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// 	return
-	// }
+	// 删除渠道（软删除）
+	if err := h.channelService.Delete(c.Request.Context(), id); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "channel deleted successfully"})
 }

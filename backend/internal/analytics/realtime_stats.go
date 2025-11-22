@@ -20,9 +20,9 @@ type RealtimeStats struct {
 
 // SlidingWindow 滑动窗口
 type SlidingWindow struct {
-	windowSize   time.Duration
-	buckets      map[int64]*WindowBucket
-	mu           sync.RWMutex
+	windowSize time.Duration
+	buckets    map[int64]*WindowBucket
+	mu         sync.RWMutex
 }
 
 // WindowBucket 窗口桶
@@ -259,16 +259,17 @@ func (rse *RealtimeStatsEngine) invalidateCache(userID string) {
 	delete(rse.lastCacheUpdate, "user:"+userID)
 }
 
+// ModelStatItem 模型统计项
+type ModelStatItem struct {
+	Model    string
+	Requests int64
+	Cost     float64
+}
+
 // GetTopModels 获取热门模型
 func (rse *RealtimeStatsEngine) GetTopModels(limit int) []*ModelStatItem {
 	rse.mu.RLock()
 	defer rse.mu.RUnlock()
-
-	type ModelStatItem struct {
-		Model    string
-		Requests int64
-		Cost     float64
-	}
 
 	var items []*ModelStatItem
 	for model, window := range rse.modelStats {
@@ -287,5 +288,3 @@ func (rse *RealtimeStatsEngine) GetTopModels(limit int) []*ModelStatItem {
 
 	return items
 }
-
-

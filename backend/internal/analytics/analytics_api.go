@@ -2,13 +2,12 @@ package analytics
 
 import (
 	"fmt"
-	"sort"
 	"time"
 )
 
 // AnalyticsAPI 数据分析 API
 type AnalyticsAPI struct {
-	logger  *UsageLogger
+	logger   *UsageLogger
 	realtime *RealtimeStatsEngine
 }
 
@@ -82,12 +81,12 @@ func (aa *AnalyticsAPI) GetCostBreakdown(userID string, startTime, endTime time.
 	}
 
 	breakdown := map[string]interface{}{
-		"total_cost":        stats.TotalCost,
-		"total_requests":    stats.TotalRequests,
-		"average_cost":      stats.AvgCostPerReq,
-		"by_model":          nil,
-		"by_provider":       nil,
-		"by_status":         nil,
+		"total_cost":     stats.TotalCost,
+		"total_requests": stats.TotalRequests,
+		"average_cost":   stats.AvgCostPerReq,
+		"by_model":       nil,
+		"by_provider":    nil,
+		"by_status":      nil,
 	}
 
 	return breakdown, nil
@@ -138,7 +137,7 @@ func (aa *AnalyticsAPI) GetTopModels(userID string, startTime, endTime time.Time
 	}
 
 	result := make(map[string]*ModelUsage)
-	
+
 	// 构建模型使用统计
 	if len(stats.Timeline) > 0 {
 		for _, point := range stats.Timeline {
@@ -263,13 +262,13 @@ func (aa *AnalyticsAPI) GetModelComparison(userID string, models []string, start
 		}
 
 		result[model] = &ModelComparison{
-			Model:           model,
-			Requests:        stats.TotalRequests,
-			AvgDuration:     stats.AvgDuration,
-			AvgTokens:       stats.AvgTokensPerReq,
-			AvgCost:         stats.AvgCostPerReq,
-			TotalCost:       stats.TotalCost,
-			SuccessRate:     float64(stats.SuccessRequests) / float64(stats.TotalRequests),
+			Model:       model,
+			Requests:    stats.TotalRequests,
+			AvgDuration: stats.AvgDuration,
+			AvgTokens:   stats.AvgTokensPerReq,
+			AvgCost:     stats.AvgCostPerReq,
+			TotalCost:   stats.TotalCost,
+			SuccessRate: float64(stats.SuccessRequests) / float64(stats.TotalRequests),
 		}
 	}
 
@@ -369,13 +368,11 @@ func (aa *AnalyticsAPI) GetProviderComparison(userID string, startTime, endTime 
 
 // ProviderStats 提供商统计
 type ProviderStats struct {
-	Provider         string  `json:"provider"`
-	Requests         int64   `json:"requests"`
-	SuccessRequests  int64   `json:"success_requests"`
-	TotalCost        float64 `json:"total_cost"`
-	AvgCost          float64 `json:"avg_cost"`
-	TotalTokens      int64   `json:"total_tokens"`
-	SuccessRate      float64 `json:"success_rate"`
+	Provider        string  `json:"provider"`
+	Requests        int64   `json:"requests"`
+	SuccessRequests int64   `json:"success_requests"`
+	TotalCost       float64 `json:"total_cost"`
+	AvgCost         float64 `json:"avg_cost"`
+	TotalTokens     int64   `json:"total_tokens"`
+	SuccessRate     float64 `json:"success_rate"`
 }
-
-
