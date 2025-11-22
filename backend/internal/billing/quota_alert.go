@@ -130,26 +130,26 @@ type QuotaExpiryPolicy struct {
 // AlertManager 预警管理器
 type AlertManager struct {
 	// 预警规则映射
-	rules map[string]*AlertRule
+	rules   map[string]*AlertRule
 	rulesMu sync.RWMutex
 
 	// 用户预警列表
 	userAlerts map[string][]*QuotaAlert
-	alertsMu sync.RWMutex
+	alertsMu   sync.RWMutex
 
 	// 配额有效期策略
 	expiryPolicies map[string]*QuotaExpiryPolicy
-	expiryMu sync.RWMutex
+	expiryMu       sync.RWMutex
 
 	// 配额管理器
 	quotaManager *QuotaManager
 
 	// 预警回调函数
-	callbacks map[AlertLevel][]func(*QuotaAlert)
+	callbacks   map[AlertLevel][]func(*QuotaAlert)
 	callbacksMu sync.RWMutex
 
 	// 统计信息
-	alertCount int64
+	alertCount   int64
 	handledCount int64
 
 	// 日志函数
@@ -159,12 +159,12 @@ type AlertManager struct {
 // NewAlertManager 创建预警管理器
 func NewAlertManager(quotaManager *QuotaManager) *AlertManager {
 	return &AlertManager{
-		rules:           make(map[string]*AlertRule),
-		userAlerts:      make(map[string][]*QuotaAlert),
-		expiryPolicies:  make(map[string]*QuotaExpiryPolicy),
-		quotaManager:    quotaManager,
-		callbacks:       make(map[AlertLevel][]func(*QuotaAlert)),
-		logFunc:         defaultLogFunc,
+		rules:          make(map[string]*AlertRule),
+		userAlerts:     make(map[string][]*QuotaAlert),
+		expiryPolicies: make(map[string]*QuotaExpiryPolicy),
+		quotaManager:   quotaManager,
+		callbacks:      make(map[AlertLevel][]func(*QuotaAlert)),
+		logFunc:        defaultLogFunc,
 	}
 }
 
@@ -400,11 +400,11 @@ func (am *AlertManager) CheckQuotaExpiry(userID string) (bool, *time.Time, error
 // AutoRechargeManager 自动充值管理器
 type AutoRechargeManager struct {
 	// 配置映射
-	configs map[string]*AutoRechargeConfig
+	configs   map[string]*AutoRechargeConfig
 	configsMu sync.RWMutex
 
 	// 充值历史
-	history map[string][]*RechargeRecord
+	history   map[string][]*RechargeRecord
 	historyMu sync.RWMutex
 
 	// 配额管理器
@@ -482,14 +482,14 @@ func (arm *AutoRechargeManager) CreateAutoRechargeConfig(userID string, triggerT
 	}
 
 	arm.configs[userID] = &AutoRechargeConfig{
-		UserID:                  userID,
-		TriggerThreshold:        triggerThreshold,
-		RechargeAmount:          rechargeAmount,
-		MaxRechargePerPeriod:    maxRechargePerPeriod,
-		PeriodDays:              periodDays,
-		Enabled:                 true,
-		CreatedAt:               time.Now(),
-		UpdatedAt:               time.Now(),
+		UserID:               userID,
+		TriggerThreshold:     triggerThreshold,
+		RechargeAmount:       rechargeAmount,
+		MaxRechargePerPeriod: maxRechargePerPeriod,
+		PeriodDays:           periodDays,
+		Enabled:              true,
+		CreatedAt:            time.Now(),
+		UpdatedAt:            time.Now(),
 	}
 
 	arm.logFunc("info", fmt.Sprintf("Created auto-recharge config for user %s (threshold: %.2f%%, amount: %.2f)", userID, triggerThreshold, rechargeAmount))
@@ -598,9 +598,25 @@ func (arm *AutoRechargeManager) GetStatistics() map[string]interface{} {
 	arm.historyMu.RUnlock()
 
 	return map[string]interface{}{
-		"config_count":    configCount,
-		"history_count":   historyCount,
-		"recharge_count":  atomic.LoadInt64(&arm.rechargeCount),
+		"config_count":   configCount,
+		"history_count":  historyCount,
+		"recharge_count": atomic.LoadInt64(&arm.rechargeCount),
 	}
 }
 
+// GetStatistics 获取统计信息
+func (am *AlertManager) GetStatistics() map[string]interface{} {
+	am.rulesMu.RLock()
+	ruleCount := len(am.rules)
+	am.rulesMu.RUnlock()
+
+	return map[string]interface{}{
+		"rule_count":    ruleCount,
+		"alert_count":   atomic.LoadInt64(&am.alertCount),
+		"handled_count": atomic.LoadInt64(&am.handledCount),
+	}
+}
+
+func timePtr(t time.Time) *time.Time {
+	return &t
+}
